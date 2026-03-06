@@ -13,7 +13,7 @@ def validate_json():
     """Validate dataform.json"""
     print("Validating dataform.json...")
     
-    config_file = Path("../dataform/dataform.json")
+    config_file = Path("dataform/dataform.json")
     
     if not config_file.exists():
         print("dataform.json not found!")
@@ -33,7 +33,7 @@ def validate_structure():
     """Validate folder structure"""
     print("\nValidating structure...")
     
-    if not Path("../dataform/definitions").exists():
+    if not Path("dataform/definitions").exists():
         print("definitions/ folder not found!")
         return False
     
@@ -44,7 +44,7 @@ def find_sqlx_files():
     """Find all SQLX files"""
     print("\nFinding SQLX files...")
     
-    sqlx_files = list(Path("../dataform/definitions").rglob("*.sqlx"))
+    sqlx_files = list(Path("dataform/definitions").rglob("*.sqlx"))
     
     if not sqlx_files:
         print("No SQLX files found")
