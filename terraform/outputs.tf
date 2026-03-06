@@ -1,19 +1,29 @@
+output "environment" {
+  value       = var.environment
+  description = "Current environment"
+}
+
 output "dataset_id" {
-  value       = google_bigquery_dataset.test_dataset.dataset_id
-  description = "Created BigQuery dataset"
+  value       = google_bigquery_dataset.dataset.dataset_id
+  description = "BigQuery dataset ID"
 }
 
 output "dataform_repository" {
   value       = google_dataform_repository.repo.name
-  description = "Created Dataform repository"
+  description = "Dataform repository name"
 }
 
-output "service_account" {
+output "service_account_email" {
   value       = google_service_account.dataform_sa.email
-  description = "Service Account email"
+  description = "Service account email"
 }
 
-output "dataform_console_url" {
-  value       = "https://console.cloud.google.com/bigquery/dataform/locations/${var.region}/repositories/${google_dataform_repository.repo.name}?project=${var.project_id}"
-  description = "Dataform Console URL"
+output "summary" {
+  value = <<-EOT
+    Environment: ${var.environment}
+    Dataset: ${google_bigquery_dataset.dataset.dataset_id}
+    Dataform Repo: ${google_dataform_repository.repo.name}
+    Service Account: ${google_service_account.dataform_sa.email}
+  EOT
+  description = "Deployment summary"
 }

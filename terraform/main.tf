@@ -14,42 +14,43 @@ provider "google-beta" {
   region  = var.region
 }
 
-# Enable Dataform API
+# Enable APIs
 resource "google_project_service" "dataform_api" {
-  provider = google-beta
-  service  = "dataform.googleapis.com"
+  provider           = google-beta
+  service            = "dataform.googleapis.com"
   disable_on_destroy = false
 }
 
-# BigQuery Dataset
-resource "google_bigquery_dataset" "test_dataset" {
+# BigQuery Dataset - WITH ENVIRONMENT PREFIX
+resource "google_bigquery_dataset" "dataset" {
   project    = var.project_id
-  dataset_id = "github_actions_test"
+  dataset_id = "${var.environment}_dataform_dataset"  # ← CHANGED!
   location   = var.region
   
   labels = {
-    created_by = "github-actions"
-    purpose    = "ci-cd-test"
+    environment = var.environment
+    managed_by  = "terraform"
   }
 }
 
-# Dataform Repository
+# Dataform Repository - WITH ENVIRONMENT PREFIX
 resource "google_dataform_repository" "repo" {
   provider = google-beta
   
   project = var.project_id
-  name    = "github-actions-dataform"
+  name    = "${var.environment}-dataform-repo"  # ← CHANGED!
   region  = var.region
   
   labels = {
-    managed_by = "github-actions"
+    environment = var.environment
+    managed_by  = "terraform"
   }
   
   depends_on = [google_project_service.dataform_api]
 }
 
-# Service Account
+# Service Account - WITH ENVIRONMENT PREFIX
 resource "google_service_account" "dataform_sa" {
-  account_id   = "github-actions-dataform"
-  display_name = "GitHub Actions Dataform SA"
+  account_id   = "${var.environment}-dataform-sa"  # ← CHANGED!
+  display_name = "${title(var.environment)} Dataform Service Account"
 }
