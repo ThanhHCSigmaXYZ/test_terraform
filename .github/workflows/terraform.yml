@@ -1,11 +1,15 @@
-name: 'Terraform Deploy to GCP'
+name: 'Terraform Multi-Environment'
 
 on:
   push:
     branches:
+      - dev
+      - staging
       - main
   pull_request:
     branches:
+      - dev
+      - staging
       - main
   workflow_dispatch:
 
@@ -17,29 +21,62 @@ env:
 
 jobs:
   terraform:
-    name: 'Terraform'
+    name: 'Terraform (${{ github.ref_name }})'
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
     
     steps:
     # Checkout code
     - name: Checkout
       uses: actions/checkout@v4
     
-    # Authenticate using Service Account Key
+    # Determine environment from branch
+    - name: Determine Environment
+      id: env
+      run: |
+        if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          echo "environment=prod" >> $GITHUB_OUTPUT
+          echo "📦 Environment: PRODUCTION" >> $GITHUB_STEP_SUMMARY
+        elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+          echo "environment=staging" >> $GITHUB_OUTPUT
+          echo "📦 Environment: STAGING" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "environment=dev" >> $GITHUB_OUTPUT
+          echo "📦 Environment: DEVELOPMENT" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    # For PRs, use base branch
+    - name: Determine Environment (PR)
+      if: github.event_name == 'pull_request'
+      id: env_pr
+      run: |
+        if [[ "${{ github.base_ref }}" == "main" ]]; then
+          echo "environment=prod" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.base_ref }}" == "staging" ]]; then
+          echo "environment=staging" >> $GITHUB_OUTPUT
+        else
+          echo "environment=dev" >> $GITHUB_OUTPUT
+        fi
+    
+    # Set final environment
+    - name: Set Environment Variable
+      id: final_env
+      run: |
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          echo "environment=${{ steps.env_pr.outputs.environment }}" >> $GITHUB_OUTPUT
+        else
+          echo "environment=${{ steps.env.outputs.environment }}" >> $GITHUB_OUTPUT
+        fi
+    
+    # Authenticate to GCP
     - name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v2'
       with:
         credentials_json: '${{ secrets.GCP_SA_KEY }}'
-    
-    # Setup gcloud CLI
-    - name: 'Set up Cloud SDK'
-      uses: 'google-github-actions/setup-gcloud@v2'
-    
-    # Verify authentication
-    - name: 'Verify GCP Authentication'
-      run: |
-        gcloud config list
-        gcloud projects describe ${{ env.GCP_PROJECT_ID }}
     
     # Setup Terraform
     - name: Setup Terraform
@@ -65,30 +102,35 @@ jobs:
     
     # Terraform Plan
     - name: Terraform Plan
+      id: plan
       working-directory: ${{ env.TF_WORKING_DIR }}
       run: |
         terraform plan \
           -var="project_id=${{ env.GCP_PROJECT_ID }}" \
           -var="region=${{ env.GCP_REGION }}" \
-          -out=tfplan
+          -var="environment=${{ steps.final_env.outputs.environment }}" \
+          -out=tfplan \
+          -no-color
+      continue-on-error: true
     
     # Show Plan
-    - name: Show Terraform Plan
-      working-directory: ${{ env.TF_WORKING_DIR }}
-      run: terraform show tfplan
-    
-    # Terraform Apply (only on main branch)
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    - name: Show Plan Summary
       working-directory: ${{ env.TF_WORKING_DIR }}
       run: |
-        terraform apply \
-          -auto-approve \
-          -var="project_id=${{ env.GCP_PROJECT_ID }}" \
-          -var="region=${{ env.GCP_REGION }}"
+        echo "## Terraform Plan - ${{ steps.final_env.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+        terraform show -no-color tfplan >> $GITHUB_STEP_SUMMARY
+    
+    # Terraform Apply (only on push to branches, not PRs)
+    - name: Terraform Apply
+      if: github.event_name == 'push' && steps.plan.outcome == 'success'
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: |
+        terraform apply -auto-approve tfplan
     
     # Show Outputs
     - name: Terraform Output
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      if: github.event_name == 'push'
       working-directory: ${{ env.TF_WORKING_DIR }}
-      run: terraform output -json
+      run: |
+        echo "## Deployment Complete - ${{ steps.final_env.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+        terraform output -json >> $GITHUB_STEP_SUMMARY
