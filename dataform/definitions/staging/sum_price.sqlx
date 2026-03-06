@@ -1,0 +1,10 @@
+config {
+  type: "view",
+  schema: "staging",
+  description: "Calculate total price from test_dataform table"
+}
+
+SELECT
+  SUM(price) as total_price,
+  COUNT(*) as record_count,
+FROM ${ref("test_dataform")}

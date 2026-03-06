@@ -1,0 +1,9 @@
+{
+  "defaultDatabase": "ats-theme-dmo-b2bdatacolab",
+  "defaultSchema": "dev_dataform_dataset",
+  "defaultLocation": "asia-northeast1",
+  "warehouse": "bigquery",
+  "vars": {
+    "environment": "dev"
+  }
+}

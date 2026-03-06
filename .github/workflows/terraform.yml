@@ -20,7 +20,72 @@ env:
 
 jobs:
   # ============================================
-  # JOB 1: PLAN (runs on Pull Request)
+  # JOB1: DATAFORM VALIDATION (runs on PR to dev)
+  # ============================================
+  dataform-validation:
+    name: 'Dataform Validation'
+    if: github.event_name == 'pull_request' && github.base_ref == 'dev'
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      pull-requests: write
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+    
+    - name: 'Setup gcloud'
+      uses: 'google-github-actions/setup-gcloud@v2'
+    
+    - name: Check Dataform Files
+      run: |
+        if [ -d "dataform" ]; then
+          echo "Dataform directory found"
+          echo "HAS_DATAFORM=true" >> $GITHUB_ENV
+        else
+          echo "ℹNo dataform directory - skipping"
+          echo "HAS_DATAFORM=false" >> $GITHUB_ENV
+        fi
+    
+    - name: Validate dataform.json
+      if: env.HAS_DATAFORM == 'true'
+      run: |
+        echo "Validating dataform.json..."
+        cat dataform/dataform.json | jq empty
+        echo "dataform.json is valid JSON"
+    
+    - name: Validate SQLX Files
+      if: env.HAS_DATAFORM == 'true'
+      run: |
+        python scripts/validate_dataform.py
+    
+    - name: BigQuery Dry-Run
+      if: env.HAS_DATAFORM == 'true'
+      run: |
+        bash scripts/bigquery_dryrun.sh
+    
+    - name: Validation Summary
+      if: env.HAS_DATAFORM == 'true'
+      run: |
+        echo "##Dataform Validation Complete" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "dataform.json: Valid" >> $GITHUB_STEP_SUMMARY
+        echo "SQLX compilation: Success" >> $GITHUB_STEP_SUMMARY
+        echo "BigQuery dry-run: Passed" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # JOB 2: PLAN (runs on Pull Request)
   # ============================================
   plan:
     name: 'Terraform Plan'
@@ -137,7 +202,7 @@ jobs:
           })
 
   # ============================================
-  # JOB 2: APPLY (runs on Push/Merge)
+  # JOB 3: APPLY (runs on Push/Merge)
   # ============================================
   apply:
     name: 'Terraform Apply'
