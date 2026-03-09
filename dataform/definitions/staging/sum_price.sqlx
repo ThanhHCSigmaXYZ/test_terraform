@@ -1,10 +1,22 @@
 config {
   type: "view",
   schema: "staging",
-  description: "Calculate total price from test_dataform table"
+  description: "Calculate total price from test_dataform table and check if it is over 100 or not",
+  assertions: {
+    nonNull: ["total_price", "record_count"],
+    rowConditions: [
+      "total_price <= 100",
+      "total_price >= 0",
+      "record_count > 0"
+    ]
+  }
 }
 
 SELECT
   SUM(price) as total_price,
   COUNT(*) as record_count,
+  AVG(price) as average_price,
+  MIN(price) as min_price,
+  MAX(price) as max_price,
+  CURRENT_TIMESTAMP() as calculated_at
 FROM ${ref("test_dataform")}
