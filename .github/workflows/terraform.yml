@@ -22,11 +22,10 @@ jobs:
   # ============================================
   # JOB1: DATAFORM VALIDATION (runs on PR to dev)
   # ============================================
-  dataform-validation:
+ dataform-validation:
     name: 'Dataform Validation'
     if: github.event_name == 'pull_request' && github.base_ref == 'dev'
     runs-on: ubuntu-latest
-    
     permissions:
       contents: read
       pull-requests: write
@@ -40,49 +39,114 @@ jobs:
       with:
         python-version: '3.11'
     
-    - name: 'Authenticate to Google Cloud'
-      uses: 'google-github-actions/auth@v2'
+    - name: Authenticate to GCP
+      uses: google-github-actions/auth@v2
       with:
         credentials_json: '${{ secrets.GCP_SA_KEY }}'
     
-    - name: 'Setup gcloud'
-      uses: 'google-github-actions/setup-gcloud@v2'
+    - name: Setup gcloud
+      uses: google-github-actions/setup-gcloud@v2
     
     - name: Check Dataform Files
+      id: check_dataform
       run: |
         if [ -d "dataform" ]; then
-          echo "Dataform directory found"
-          echo "HAS_DATAFORM=true" >> $GITHUB_ENV
+          echo "has_dataform=true" >> $GITHUB_OUTPUT
         else
-          echo "ℹNo dataform directory - skipping"
-          echo "HAS_DATAFORM=false" >> $GITHUB_ENV
+          echo "has_dataform=false" >> $GITHUB_OUTPUT
         fi
     
     - name: Validate dataform.json
-      if: env.HAS_DATAFORM == 'true'
+      if: steps.check_dataform.outputs.has_dataform == 'true'
       run: |
-        echo "Validating dataform.json..."
-        cat dataform/dataform.json | jq empty
-        echo "dataform.json is valid JSON"
+        echo "## Dataform Configuration" >> $GITHUB_STEP_SUMMARY
+        cat dataform/dataform.json | jq empty && echo "PASS: dataform.json is valid" >> $GITHUB_STEP_SUMMARY || echo "FAIL: dataform.json is invalid" >> $GITHUB_STEP_SUMMARY
     
     - name: Validate SQLX Files
-      if: env.HAS_DATAFORM == 'true'
+      if: steps.check_dataform.outputs.has_dataform == 'true'
       run: |
-        python scripts/validate_dataform.py
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## SQLX Compilation" >> $GITHUB_STEP_SUMMARY
+        python scripts/validate_dataform.py | tee validation_output.txt
+        
+        if grep -q "Validation Complete!" validation_output.txt; then
+          SQLX_COUNT=$(grep "SQLX files:" validation_output.txt | awk '{print $3}')
+          COMPILED_COUNT=$(grep "Compiled:" validation_output.txt | awk '{print $2}')
+          echo "PASS: Compiled $COMPILED_COUNT/$SQLX_COUNT SQLX files successfully" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "FAIL: SQLX compilation failed" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
     
     - name: BigQuery Dry-Run
-      if: env.HAS_DATAFORM == 'true'
+      if: steps.check_dataform.outputs.has_dataform == 'true'
       run: |
-        bash scripts/bigquery_dryrun.sh
-    
-    - name: Validation Summary
-      if: env.HAS_DATAFORM == 'true'
-      run: |
-        echo "##Dataform Validation Complete" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "dataform.json: Valid" >> $GITHUB_STEP_SUMMARY
-        echo "SQLX compilation: Success" >> $GITHUB_STEP_SUMMARY
-        echo "BigQuery dry-run: Passed" >> $GITHUB_STEP_SUMMARY
+        echo "## BigQuery Dry-Run (Syntax Check)" >> $GITHUB_STEP_SUMMARY
+        bash scripts/bigquery_dryrun.sh | tee dryrun_output.txt
+        
+        if grep -q "Success:" dryrun_output.txt; then
+          SUCCESS=$(grep "Success:" dryrun_output.txt | awk '{print $2}')
+          FAILED=$(grep "Failed:" dryrun_output.txt | awk '{print $2}')
+          echo "Success: $SUCCESS" >> $GITHUB_STEP_SUMMARY
+          if [ "$FAILED" != "0" ]; then
+            echo "Failed: $FAILED" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+        fi
+    
+    - name: Create View for Testing
+      if: steps.check_dataform.outputs.has_dataform == 'true'
+      run: |
+        bq mk --dataset --location=asia-northeast1 --project_id=ats-theme-dmo-b2bdatacolab dev_dataform_dataset 2>/dev/null || true
+        bq query --use_legacy_sql=false --project_id=ats-theme-dmo-b2bdatacolab < scripts/compiled/sum_price.sql || true
+    
+    - name: Run Dataform Tests
+      if: steps.check_dataform.outputs.has_dataform == 'true'
+      run: |
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Data Quality Tests" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        bash scripts/test_dataform.sh | tee test_output.txt
+        
+        echo "| Test | Result | Value |" >> $GITHUB_STEP_SUMMARY
+        echo "|------|--------|-------|" >> $GITHUB_STEP_SUMMARY
+        
+        if grep -q "Test 1:.*PASS" test_output.txt; then
+          echo "| NULL check | PASS | No NULL values |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| NULL check | FAIL | Found NULL values |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if grep -q "Test 2:.*PASS" test_output.txt; then
+          PRICE=$(grep "Test 2:.*PASS" test_output.txt | grep -oP 'total_price = \K[0-9.]+')
+          echo "| total_price <= 100 | PASS | $PRICE |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| total_price <= 100 | FAIL | Exceeds 100 |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if grep -q "Test 3:.*PASS" test_output.txt; then
+          PRICE=$(grep "Test 3:.*PASS" test_output.txt | grep -oP 'total_price = \K[0-9.]+')
+          echo "| total_price >= 0 | PASS | $PRICE |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| total_price >= 0 | FAIL | Negative value |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if grep -q "Test 4:.*PASS" test_output.txt; then
+          COUNT=$(grep "Test 4:.*PASS" test_output.txt | grep -oP 'record_count = \K[0-9]+')
+          echo "| record_count > 0 | PASS | $COUNT |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| record_count > 0 | FAIL | No records |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if grep -q "All tests passed!" test_output.txt; then
+          echo "### Result: All tests passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "### Result: Some tests failed" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
 
   # ============================================
   # JOB 2: PLAN (runs on Pull Request)
