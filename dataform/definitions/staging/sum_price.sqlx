@@ -1,6 +1,6 @@
 config {
   type: "view",
-  schema: "staging",
+  schema: "dev_dataform_dataset",
   description: "Calculate total price from test_dataform table and check if it is over 100 or not",
   assertions: {
     nonNull: ["total_price", "record_count"],
