@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Dataform validation script for POC
-Validates: JSON, SQLX structure, basic compilation
+Compiles SQLX to SQL with CREATE VIEW/TABLE statements
+Run from: scripts/ folder
+Output: scripts/compiled/*.sql
 """
 
 import json
@@ -16,60 +18,78 @@ def validate_json():
     config_file = Path("dataform/dataform.json")
     
     if not config_file.exists():
-        print("dataform.json not found!")
+        print("ERROR: dataform.json not found")
+        print("  Make sure you're running from scripts/folder")
         return False, None
     
     try:
         config = json.load(open(config_file))
-        print(f"dataform.json is valid JSON")
-        print(f"   Project: {config.get('defaultDatabase')}")
-        print(f"   Schema: {config.get('defaultSchema')}")
+        print("OK: dataform.json is valid JSON")
+        print("  Project:", config.get('defaultDatabase'))
+        print("  Schema:", config.get('defaultSchema'))
         return True, config
     except json.JSONDecodeError as e:
-        print(f"Invalid JSON: {e}")
+        print("ERROR: Invalid JSON:", e)
         return False, None
 
 def validate_structure():
     """Validate folder structure"""
     print("\nValidating structure...")
     
-    if not Path("dataform/definitions").exists():
-        print("definitions/ folder not found!")
+    definitions_dir = Path("dataform/definitions")
+    
+    if not definitions_dir.exists():
+        print("ERROR: definitions/ folder not found")
         return False
     
-    print("definitions/ folder exists")
+    print("OK: definitions/ folder exists")
     return True
 
 def find_sqlx_files():
     """Find all SQLX files"""
     print("\nFinding SQLX files...")
     
-    sqlx_files = list(Path("dataform/definitions").rglob("*.sqlx"))
+    definitions_dir = Path("dataform/definitions")
+    sqlx_files = list(definitions_dir.rglob("*.sqlx"))
     
     if not sqlx_files:
-        print("No SQLX files found")
+        print("WARNING: No SQLX files found")
         return []
     
-    print(f"Found {len(sqlx_files)} SQLX file(s):")
+    print("Found", len(sqlx_files), "SQLX file(s):")
     for f in sqlx_files:
-        print(f"   - {f}")
+        print("  -", f)
     
     return sqlx_files
 
 def compile_simple_sqlx(sqlx_file, config):
-    """Simple SQLX compilation - replace ${ref()} only"""
-    print(f"\nCompiling {sqlx_file.name}...")
+    """Simple SQLX compilation - replace ${ref()} and add CREATE VIEW/TABLE"""
+    print("\nCompiling", sqlx_file.name, "...")
     
     content = sqlx_file.read_text()
     
-    # Get config
+    # Get config values
     project = config.get('defaultDatabase')
-    schema = config.get('defaultSchema', 'public')
+    default_schema = config.get('defaultSchema', 'public')
     
-    # Replace ${ref("table")} - uses defaultSchema
+    # Parse config block to extract schema and type
+    schema = default_schema
+    view_type = "view"
+    
+    # Extract schema from config if present
+    schema_match = re.search(r'schema:\s*"([^"]+)"', content)
+    if schema_match:
+        schema = schema_match.group(1)
+    
+    # Extract type from config if present
+    type_match = re.search(r'type:\s*"([^"]+)"', content)
+    if type_match:
+        view_type = type_match.group(1)
+    
+    # Replace ${ref("table")}
     def replace_ref(match):
         table = match.group(1)
-        return f'`{project}.{schema}.{table}`'
+        return f'`{project}.{default_schema}.{table}`'
     
     compiled = re.sub(r'\$\{ref\("([^"]+)"\)\}', replace_ref, content)
     
@@ -85,17 +105,47 @@ def compile_simple_sqlx(sqlx_file, config):
         compiled
     )
     
-    # Remove config block
-    compiled = re.sub(r'config\s*\{[^}]+\}', '', compiled, flags=re.DOTALL)
+    # Remove config block completely
+    config_start = compiled.find('config')
+    if config_start != -1:
+        brace_pos = compiled.find('{', config_start)
+        if brace_pos != -1:
+            brace_count = 0
+            i = brace_pos
+            while i < len(compiled):
+                if compiled[i] == '{':
+                    brace_count += 1
+                elif compiled[i] == '}':
+                    brace_count -= 1
+                    if brace_count == 0:
+                        compiled = compiled[:config_start] + compiled[i+1:]
+                        break
+                i += 1
     
-    # Clean up
+    # Clean up whitespace
     compiled = compiled.strip()
+    lines = [line for line in compiled.split('\n') if line.strip()]
+    compiled = '\n'.join(lines)
     
-    if compiled:
-        print(f"Compiled successfully")
+    # Get view/table name from filename
+    view_name = sqlx_file.stem
+    full_path = f'`{project}.{schema}.{view_name}`'
+    
+    # Add CREATE statement
+    if view_type == "view":
+        compiled = f"CREATE OR REPLACE VIEW {full_path} AS\n{compiled}"
+    elif view_type == "table":
+        compiled = f"CREATE OR REPLACE TABLE {full_path} AS\n{compiled}"
+    else:
+        compiled = f"CREATE OR REPLACE VIEW {full_path} AS\n{compiled}"
+    
+    if compiled and ('SELECT' in compiled or 'CREATE' in compiled):
+        print("OK: Compiled successfully")
+        print("  Type:", view_type)
+        print("  Target:", schema + "." + view_name)
         return compiled
     else:
-        print(f"Compilation failed")
+        print("ERROR: Compilation failed")
         return None
 
 def validate_sqlx_files(sqlx_files, config):
@@ -105,29 +155,30 @@ def validate_sqlx_files(sqlx_files, config):
     compiled_sqls = []
     
     for sqlx_file in sqlx_files:
-        # Check for unsupported syntax
         content = sqlx_file.read_text()
         
         if '${when(' in content:
-            print(f"{sqlx_file.name} uses ${{when()}} - not supported in POC")
+            print("WARNING:", sqlx_file.name, "uses ${when()} - not supported in POC")
         
         if '${self(' in content:
-            print(f"{sqlx_file.name} uses ${{self()}} - not supported in POC")
+            print("WARNING:", sqlx_file.name, "uses ${self()} - not supported in POC")
             continue
         
         # Compile
         compiled_sql = compile_simple_sqlx(sqlx_file, config)
         
         if compiled_sql:
-            # Save compiled SQL
+            # Save to compiled/ folder (relative to scripts/)
             output_dir = Path("compiled")
-            output_dir.mkdir(exist_ok=True)
+            output_dir.mkdir(parents=True, exist_ok=True)
             
             output_file = output_dir / f"{sqlx_file.stem}.sql"
-            output_file.write_text(compiled_sql)
+            
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(compiled_sql)
             
             compiled_sqls.append(output_file)
-            print(f"   Saved to: {output_file}")
+            print("  Saved to:", output_file)
     
     return compiled_sqls
 
@@ -149,25 +200,25 @@ def main():
     # Find SQLX files
     sqlx_files = find_sqlx_files()
     if not sqlx_files:
-        print("\nNo SQLX files to validate")
+        print("\nWARNING: No SQLX files to validate")
         sys.exit(0)
     
     # Validate and compile
     compiled_sqls = validate_sqlx_files(sqlx_files, config)
     
     print("\n" + "=" * 50)
-    print(f"Validation Complete!")
-    print(f"   JSON valid: OK")
-    print(f"   Structure valid: OK")
-    print(f"   SQLX files: {len(sqlx_files)}")
-    print(f"   Compiled: {len(compiled_sqls)}")
+    print("Validation Complete!")
+    print("  JSON valid: OK")
+    print("  Structure valid: OK")
+    print("  SQLX files:", len(sqlx_files))
+    print("  Compiled:", len(compiled_sqls))
     print("=" * 50)
     
     if compiled_sqls:
-        print("\nNext: Run BigQuery dry-run")
+        print("\nNext: Run BigQuery dry-run and tests")
         sys.exit(0)
     else:
-        print("\nNo SQL files compiled")
+        print("\nWARNING: No SQL files compiled")
         sys.exit(1)
 
 if __name__ == "__main__":
