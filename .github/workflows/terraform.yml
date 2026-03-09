@@ -22,7 +22,7 @@ jobs:
   # ============================================
   # JOB1: DATAFORM VALIDATION (runs on PR to dev)
   # ============================================
- dataform-validation:
+  dataform-validation:
     name: 'Dataform Validation'
     if: github.event_name == 'pull_request' && github.base_ref == 'dev'
     runs-on: ubuntu-latest
@@ -165,7 +165,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     
-    # Determine environment from PR target branch
     - name: Determine Environment
       id: env
       run: |
@@ -215,7 +214,6 @@ jobs:
           -no-color
       continue-on-error: true
     
-    # Save plan as artifact
     - name: Upload Plan Artifact
       uses: actions/upload-artifact@v4
       with:
@@ -223,7 +221,6 @@ jobs:
         path: terraform/tfplan
         retention-days: 5
     
-    # Show plan in summary
     - name: Show Plan Summary
       working-directory: ${{ env.TF_WORKING_DIR }}
       run: |
@@ -234,7 +231,6 @@ jobs:
         terraform show -no-color tfplan >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
     
-    # Comment plan on PR (optional but nice)
     - name: Comment Plan on PR
       uses: actions/github-script@v7
       if: github.event_name == 'pull_request'
@@ -281,7 +277,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     
-    # Determine environment from branch
     - name: Determine Environment
       id: env
       run: |
