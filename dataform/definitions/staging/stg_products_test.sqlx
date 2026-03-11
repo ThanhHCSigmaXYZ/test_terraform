@@ -12,7 +12,7 @@ input "raw_products" {
 }
 
 SELECT
-  1600.0 AS total_price,
+  160.0 AS total_price,
   5     AS record_count,
   32.0  AS average_price,
   10.0  AS min_price,
