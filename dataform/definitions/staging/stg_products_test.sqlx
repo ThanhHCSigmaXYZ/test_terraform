@@ -1,3 +1,4 @@
+cat > dataform/definitions/staging/stg_products_test.sqlx << 'EOF'
 config {
   type: "test",
   dataset: "stg_products"
@@ -5,12 +6,20 @@ config {
 
 input "raw_products" {
   SELECT 1 AS product_id, 10.0 AS price UNION ALL
-  SELECT 1 AS product_id, 20.0 AS price UNION ALL
-  SELECT 2 AS product_id, 30.0 AS price UNION ALL
-  SELECT 2 AS product_id, 40.0 AS price
+  SELECT 2 AS product_id, 25.0 AS price UNION ALL
+  SELECT 3 AS product_id, 30.0 AS price UNION ALL
+  SELECT 4 AS product_id, 45.0 AS price UNION ALL
+  SELECT 5 AS product_id, 50.0 AS price
 }
 
 SELECT
-  1 AS product_id, 30.0 AS total_price, 2 AS record_count, 15.0 AS average_price, 10.0 AS min_price, 20.0 AS max_price UNION ALL
+  1 AS product_id, 10.0 AS total_price, 1 AS record_count, 10.0 AS average_price, 10.0 AS min_price, 10.0 AS max_price UNION ALL
 SELECT
-  2 AS product_id, 70.0 AS total_price, 2 AS record_count, 35.0 AS average_price, 30.0 AS min_price, 40.0 AS max_price
+  2 AS product_id, 25.0 AS total_price, 1 AS record_count, 25.0 AS average_price, 25.0 AS min_price, 25.0 AS max_price UNION ALL
+SELECT
+  3 AS product_id, 30.0 AS total_price, 1 AS record_count, 30.0 AS average_price, 30.0 AS min_price, 30.0 AS max_price UNION ALL
+SELECT
+  4 AS product_id, 45.0 AS total_price, 1 AS record_count, 45.0 AS average_price, 45.0 AS min_price, 45.0 AS max_price UNION ALL
+SELECT
+  5 AS product_id, 50.0 AS total_price, 1 AS record_count, 50.0 AS average_price, 50.0 AS min_price, 50.0 AS max_price
+EOF
