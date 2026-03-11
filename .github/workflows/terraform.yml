@@ -54,23 +54,11 @@ jobs:
     - name: Create Dataform credentials
       working-directory: ./dataform
       run: |
-        TOKEN=$(gcloud auth print-access-token)
-        cat > .df-credentials.json << EOF
-        {
+        echo '{
           "projectId": "${{ env.GCP_PROJECT_ID }}",
           "location": "${{ env.GCP_REGION }}",
-          "credentials": {
-            "type": "google_credentials",
-            "token": "${TOKEN}"
-          }
-        }
-        EOF
-        
-    - name: Check credentials file
-      working-directory: ./dataform
-      run: |
-        echo "--- .df-credentials.json content ---"
-        cat .df-credentials.json | jq .
+          "credentials": ${{ secrets.GCP_SA_KEY }}
+        }' > .df-credentials.json
 
     - name: Dataform Compile
       working-directory: ./dataform
