@@ -46,12 +46,21 @@ def validate_structure():
     return True
 
 def find_sqlx_files():
-    """Find all SQLX files"""
+    """Find all SQLX files (excluding test files)"""
     print("\nFinding SQLX files...")
     
     definitions_dir = Path("dataform/definitions")
-    sqlx_files = list(definitions_dir.rglob("*.sqlx"))
-    
+    all_sqlx_files = list(definitions_dir.rglob("*.sqlx"))
+
+    # Exclude *_test.sqlx — these are Dataform unit test files, not compiled to SQL
+    sqlx_files = [f for f in all_sqlx_files if not f.stem.endswith("_test")]
+    excluded = [f for f in all_sqlx_files if f.stem.endswith("_test")]
+
+    if excluded:
+        print(f"Skipped {len(excluded)} test file(s) (will not be dry-run):")
+        for f in excluded:
+            print("  -", f)
+
     if not sqlx_files:
         print("WARNING: No SQLX files found")
         return []
@@ -61,6 +70,35 @@ def find_sqlx_files():
         print("  -", f)
     
     return sqlx_files
+
+def strip_config_block(compiled):
+    """Remove config { ... } block from SQLX content"""
+    config_start = compiled.find('config')
+    if config_start != -1:
+        brace_pos = compiled.find('{', config_start)
+        if brace_pos != -1:
+            brace_count = 0
+            i = brace_pos
+            while i < len(compiled):
+                if compiled[i] == '{':
+                    brace_count += 1
+                elif compiled[i] == '}':
+                    brace_count -= 1
+                    if brace_count == 0:
+                        compiled = compiled[:config_start] + compiled[i+1:]
+                        break
+                i += 1
+    return compiled
+
+def strip_test_blocks(compiled):
+    """Remove test \"...\" { ... } blocks (Dataform unit test syntax - not valid SQL)"""
+    compiled = re.sub(
+        r'test\s+"[^"]+"\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}',
+        '',
+        compiled,
+        flags=re.DOTALL
+    )
+    return compiled
 
 def compile_simple_sqlx(sqlx_file, config):
     """Simple SQLX compilation - replace ${ref()} and add CREATE VIEW/TABLE"""
@@ -105,22 +143,11 @@ def compile_simple_sqlx(sqlx_file, config):
         compiled
     )
     
-    # Remove config block completely
-    config_start = compiled.find('config')
-    if config_start != -1:
-        brace_pos = compiled.find('{', config_start)
-        if brace_pos != -1:
-            brace_count = 0
-            i = brace_pos
-            while i < len(compiled):
-                if compiled[i] == '{':
-                    brace_count += 1
-                elif compiled[i] == '}':
-                    brace_count -= 1
-                    if brace_count == 0:
-                        compiled = compiled[:config_start] + compiled[i+1:]
-                        break
-                i += 1
+    # Remove config block
+    compiled = strip_config_block(compiled)
+
+    # Remove test blocks (Dataform unit test syntax - not valid SQL)
+    compiled = strip_test_blocks(compiled)
     
     # Clean up whitespace
     compiled = compiled.strip()
