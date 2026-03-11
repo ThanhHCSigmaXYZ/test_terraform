@@ -1,6 +1,6 @@
 config {
   type: "test",
-  dataset: "dev_dataform_dataset"
+  dataset: "stg_products"
 }
 
 input "raw_products" {
