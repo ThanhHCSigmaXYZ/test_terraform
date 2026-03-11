@@ -1,0 +1,15 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "stg_products"
+}
+
+SELECT
+  product_id,
+  SUM(price)   AS total_price,
+  COUNT(*)     AS record_count,
+  AVG(price)   AS average_price,
+  MIN(price)   AS min_price,
+  MAX(price)   AS max_price
+FROM ${ref("raw_products")}
+GROUP BY product_id

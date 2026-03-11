@@ -1,252 +1,307 @@
-#!/usr/bin/env python3
-"""
-Dataform validation script for POC
-Compiles SQLX to SQL with CREATE VIEW/TABLE statements
-Run from: scripts/ folder
-Output: scripts/compiled/*.sql
-"""
+name: 'Terraform Multi-Environment CI/CD'
 
-import json
-import re
-import sys
-from pathlib import Path
+on:
+  push:
+    branches:
+      - dev
+      - staging
+      - main
+  pull_request:
+    branches:
+      - dev
+      - staging
+      - main
 
-def validate_json():
-    """Validate dataform.json"""
-    print("Validating dataform.json...")
-    
-    config_file = Path("dataform/dataform.json")
-    
-    if not config_file.exists():
-        print("ERROR: dataform.json not found")
-        print("  Make sure you're running from scripts/folder")
-        return False, None
-    
-    try:
-        config = json.load(open(config_file))
-        print("OK: dataform.json is valid JSON")
-        print("  Project:", config.get('defaultDatabase'))
-        print("  Schema:", config.get('defaultSchema'))
-        return True, config
-    except json.JSONDecodeError as e:
-        print("ERROR: Invalid JSON:", e)
-        return False, None
+env:
+  TF_VERSION: '1.5.0'
+  TF_WORKING_DIR: './terraform'
+  GCP_PROJECT_ID: 'ats-theme-dmo-b2bdatacolab'
+  GCP_REGION: 'asia-northeast1'
 
-def validate_structure():
-    """Validate folder structure"""
-    print("\nValidating structure...")
-    
-    definitions_dir = Path("dataform/definitions")
-    
-    if not definitions_dir.exists():
-        print("ERROR: definitions/ folder not found")
-        return False
-    
-    print("OK: definitions/ folder exists")
-    return True
+jobs:
+  # ============================================
+  # JOB1: DATAFORM VALIDATION (runs on PR to dev)
+  # ============================================
+  dataform-validation:
+    name: 'Dataform Validation'
+    if: github.event_name == 'pull_request' && github.base_ref == 'dev'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
 
-def find_sqlx_files():
-    """Find all SQLX files (excluding test files)"""
-    print("\nFinding SQLX files...")
-    
-    definitions_dir = Path("dataform/definitions")
-    all_sqlx_files = list(definitions_dir.rglob("*.sqlx"))
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
 
-    # Exclude *_test.sqlx — these are Dataform unit test files, not compiled to SQL
-    sqlx_files = [f for f in all_sqlx_files if not f.stem.endswith("_test")]
-    excluded = [f for f in all_sqlx_files if f.stem.endswith("_test")]
+    - name: Authenticate to GCP
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
-    if excluded:
-        print(f"Skipped {len(excluded)} test file(s) (will not be dry-run):")
-        for f in excluded:
-            print("  -", f)
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
 
-    if not sqlx_files:
-        print("WARNING: No SQLX files found")
-        return []
-    
-    print("Found", len(sqlx_files), "SQLX file(s):")
-    for f in sqlx_files:
-        print("  -", f)
-    
-    return sqlx_files
+    - name: Install Dataform CLI
+      run: npm install -g @dataform/cli@3.0.7
 
-def strip_config_block(compiled):
-    """Remove config { ... } block from SQLX content"""
-    config_start = compiled.find('config')
-    if config_start != -1:
-        brace_pos = compiled.find('{', config_start)
-        if brace_pos != -1:
-            brace_count = 0
-            i = brace_pos
-            while i < len(compiled):
-                if compiled[i] == '{':
-                    brace_count += 1
-                elif compiled[i] == '}':
-                    brace_count -= 1
-                    if brace_count == 0:
-                        compiled = compiled[:config_start] + compiled[i+1:]
-                        break
-                i += 1
-    return compiled
+    - name: Install Dataform dependencies
+      working-directory: ./dataform
+      run: dataform install
 
-def strip_test_blocks(compiled):
-    """Remove test \"...\" { ... } blocks (Dataform unit test syntax - not valid SQL)"""
-    compiled = re.sub(
-        r'test\s+"[^"]+"\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}',
-        '',
-        compiled,
-        flags=re.DOTALL
-    )
-    return compiled
+    - name: Create Dataform credentials
+      working-directory: ./dataform
+      run: |
+        echo '{
+          "projectId": "${{ env.GCP_PROJECT_ID }}",
+          "location": "${{ env.GCP_REGION }}",
+          "credentials": ${{ secrets.GCP_SA_KEY }}
+        }' > .df-credentials.json
 
-def compile_simple_sqlx(sqlx_file, config):
-    """Simple SQLX compilation - replace ${ref()} and add CREATE VIEW/TABLE"""
-    print("\nCompiling", sqlx_file.name, "...")
-    
-    content = sqlx_file.read_text()
-    
-    # Get config values
-    project = config.get('defaultDatabase')
-    default_schema = config.get('defaultSchema', 'public')
-    
-    # Parse config block to extract schema and type
-    schema = default_schema
-    view_type = "view"
-    
-    # Extract schema from config if present
-    schema_match = re.search(r'schema:\s*"([^"]+)"', content)
-    if schema_match:
-        schema = schema_match.group(1)
-    
-    # Extract type from config if present
-    type_match = re.search(r'type:\s*"([^"]+)"', content)
-    if type_match:
-        view_type = type_match.group(1)
-    
-    # Replace ${ref("table")}
-    def replace_ref(match):
-        table = match.group(1)
-        return f'`{project}.{default_schema}.{table}`'
-    
-    compiled = re.sub(r'\$\{ref\("([^"]+)"\)\}', replace_ref, content)
-    
-    # Replace ${ref("schema", "table")}
-    def replace_ref_two(match):
-        schema_name = match.group(1)
-        table_name = match.group(2)
-        return f'`{project}.{schema_name}.{table_name}`'
-    
-    compiled = re.sub(
-        r'\$\{ref\("([^"]+)",\s*"([^"]+)"\)\}',
-        replace_ref_two,
-        compiled
-    )
-    
-    # Remove config block
-    compiled = strip_config_block(compiled)
+    - name: Dataform Compile
+      working-directory: ./dataform
+      run: |
+        echo "## Dataform Compile" >> $GITHUB_STEP_SUMMARY
+        if dataform compile 2>&1 | tee compile_output.txt; then
+          echo "PASS: Compiled successfully" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "FAIL: Compile failed" >> $GITHUB_STEP_SUMMARY
+          cat compile_output.txt
+          exit 1
+        fi
 
-    # Remove test blocks (Dataform unit test syntax - not valid SQL)
-    compiled = strip_test_blocks(compiled)
-    
-    # Clean up whitespace
-    compiled = compiled.strip()
-    lines = [line for line in compiled.split('\n') if line.strip()]
-    compiled = '\n'.join(lines)
-    
-    # Get view/table name from filename
-    view_name = sqlx_file.stem
-    full_path = f'`{project}.{schema}.{view_name}`'
-    
-    # Add CREATE statement
-    if view_type == "view":
-        compiled = f"CREATE OR REPLACE VIEW {full_path} AS\n{compiled}"
-    elif view_type == "table":
-        compiled = f"CREATE OR REPLACE TABLE {full_path} AS\n{compiled}"
-    else:
-        compiled = f"CREATE OR REPLACE VIEW {full_path} AS\n{compiled}"
-    
-    if compiled and ('SELECT' in compiled or 'CREATE' in compiled):
-        print("OK: Compiled successfully")
-        print("  Type:", view_type)
-        print("  Target:", schema + "." + view_name)
-        return compiled
-    else:
-        print("ERROR: Compilation failed")
-        return None
+    - name: Dataform Test
+      working-directory: ./dataform
+      run: |
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Dataform Unit Tests" >> $GITHUB_STEP_SUMMARY
+        if dataform test 2>&1 | tee test_output.txt; then
+          echo "PASS: All unit tests passed" >> $GITHUB_STEP_SUMMARY
+          cat test_output.txt >> $GITHUB_STEP_SUMMARY
+        else
+          echo "FAIL: Some unit tests failed" >> $GITHUB_STEP_SUMMARY
+          cat test_output.txt
+          exit 1
+        fi
 
-def validate_sqlx_files(sqlx_files, config):
-    """Validate and compile all SQLX files"""
-    print("\nValidating SQLX files...")
-    
-    compiled_sqls = []
-    
-    for sqlx_file in sqlx_files:
-        content = sqlx_file.read_text()
-        
-        if '${when(' in content:
-            print("WARNING:", sqlx_file.name, "uses ${when()} - not supported in POC")
-        
-        if '${self(' in content:
-            print("WARNING:", sqlx_file.name, "uses ${self()} - not supported in POC")
-            continue
-        
-        # Compile
-        compiled_sql = compile_simple_sqlx(sqlx_file, config)
-        
-        if compiled_sql:
-            # Save to compiled/ folder (relative to scripts/)
-            output_dir = Path("compiled")
-            output_dir.mkdir(parents=True, exist_ok=True)
-            
-            output_file = output_dir / f"{sqlx_file.stem}.sql"
-            
-            with open(output_file, 'w', encoding='utf-8') as f:
-                f.write(compiled_sql)
-            
-            compiled_sqls.append(output_file)
-            print("  Saved to:", output_file)
-    
-    return compiled_sqls
+    - name: Comment Results on PR
+      uses: actions/github-script@v7
+      if: always()
+      with:
+        script: |
+          const fs = require('fs');
+          const compileOut = fs.existsSync('dataform/compile_output.txt')
+            ? fs.readFileSync('dataform/compile_output.txt', 'utf8')
+            : 'No output';
+          const testOut = fs.existsSync('dataform/test_output.txt')
+            ? fs.readFileSync('dataform/test_output.txt', 'utf8')
+            : 'No output';
 
-def main():
-    """Main validation"""
-    print("=" * 50)
-    print("Dataform Validation (POC)")
-    print("=" * 50)
-    
-    # Validate JSON
-    json_valid, config = validate_json()
-    if not json_valid:
-        sys.exit(1)
-    
-    # Validate structure
-    if not validate_structure():
-        sys.exit(1)
-    
-    # Find SQLX files
-    sqlx_files = find_sqlx_files()
-    if not sqlx_files:
-        print("\nWARNING: No SQLX files to validate")
-        sys.exit(0)
-    
-    # Validate and compile
-    compiled_sqls = validate_sqlx_files(sqlx_files, config)
-    
-    print("\n" + "=" * 50)
-    print("Validation Complete!")
-    print("  JSON valid: OK")
-    print("  Structure valid: OK")
-    print("  SQLX files:", len(sqlx_files))
-    print("  Compiled:", len(compiled_sqls))
-    print("=" * 50)
-    
-    if compiled_sqls:
-        print("\nNext: Run BigQuery dry-run and tests")
-        sys.exit(0)
-    else:
-        print("\nWARNING: No SQL files compiled")
-        sys.exit(1)
+          const output = `### Dataform Validation
 
-if __name__ == "__main__":
-    main()
+          #### Compile \`${{ steps.compile.outcome || 'completed' }}\`
+          <details><summary>Compile Output</summary>
+
+          \`\`\`
+          ${compileOut}
+          \`\`\`
+          </details>
+
+          #### Unit Tests
+          <details><summary>Test Output</summary>
+
+          \`\`\`
+          ${testOut}
+          \`\`\`
+          </details>
+
+          *Pushed by: @${{ github.actor }}*`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+
+  # ============================================
+  # JOB 2: PLAN (runs on Pull Request)
+  # ============================================
+  plan:
+    name: 'Terraform Plan'
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Determine Environment
+      id: env
+      run: |
+        if [[ "${{ github.base_ref }}" == "main" ]]; then
+          echo "environment=prod" >> $GITHUB_OUTPUT
+          echo "Target: PRODUCTION" >> $GITHUB_STEP_SUMMARY
+        elif [[ "${{ github.base_ref }}" == "staging" ]]; then
+          echo "environment=staging" >> $GITHUB_OUTPUT
+          echo "Target: STAGING" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "environment=dev" >> $GITHUB_OUTPUT
+          echo "Target: DEVELOPMENT" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Terraform Init
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: terraform init
+
+    - name: Terraform Format Check
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: terraform fmt -check
+      continue-on-error: true
+
+    - name: Terraform Validate
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: terraform validate
+
+    - name: Terraform Plan
+      id: plan
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: |
+        terraform plan \
+          -var="project_id=${{ env.GCP_PROJECT_ID }}" \
+          -var="region=${{ env.GCP_REGION }}" \
+          -var="environment=${{ steps.env.outputs.environment }}" \
+          -out=tfplan \
+          -no-color
+      continue-on-error: true
+
+    - name: Upload Plan Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: tfplan-${{ steps.env.outputs.environment }}-${{ github.run_number }}
+        path: terraform/tfplan
+        retention-days: 5
+
+    - name: Show Plan Summary
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: |
+        echo "## Terraform Plan - ${{ steps.env.outputs.environment }} Environment" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Plan Output:" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        terraform show -no-color tfplan >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+
+    - name: Comment Plan on PR
+      uses: actions/github-script@v7
+      if: github.event_name == 'pull_request'
+      env:
+        PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+      with:
+        script: |
+          const output = `### Terraform Plan - ${{ steps.env.outputs.environment }} Environment
+
+          #### Terraform Initialization \`${{ steps.init.outcome }}\`
+          #### Terraform Validation \`${{ steps.validate.outcome }}\`
+          #### Terraform Plan \`${{ steps.plan.outcome }}\`
+
+          <details><summary>Show Plan</summary>
+
+          \`\`\`terraform
+          ${process.env.PLAN}
+          \`\`\`
+
+          </details>
+
+          *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+
+  # ============================================
+  # JOB 3: APPLY (runs on Push/Merge)
+  # ============================================
+  apply:
+    name: 'Terraform Apply'
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Determine Environment
+      id: env
+      run: |
+        if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          echo "environment=prod" >> $GITHUB_OUTPUT
+          echo "Deploying to: PRODUCTION" >> $GITHUB_STEP_SUMMARY
+        elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+          echo "environment=staging" >> $GITHUB_OUTPUT
+          echo "Deploying to: STAGING" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "environment=dev" >> $GITHUB_OUTPUT
+          echo "Deploying to: DEVELOPMENT" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Terraform Init
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: terraform init
+
+    - name: Terraform Plan
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: |
+        terraform plan \
+          -var="project_id=${{ env.GCP_PROJECT_ID }}" \
+          -var="region=${{ env.GCP_REGION }}" \
+          -var="environment=${{ steps.env.outputs.environment }}" \
+          -out=tfplan
+
+    - name: Terraform Apply
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: terraform apply -auto-approve tfplan
+
+    - name: Terraform Output
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: |
+        echo "## Deployment Complete - ${{ steps.env.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Outputs:" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        terraform output >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
