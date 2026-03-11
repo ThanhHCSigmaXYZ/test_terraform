@@ -54,12 +54,10 @@ jobs:
     - name: Create Dataform credentials
       working-directory: ./dataform
       run: |
-        jq -n \
-          --arg project "${{ env.GCP_PROJECT_ID }}" \
-          --arg location "${{ env.GCP_REGION }}" \
-          --argjson creds '${{ secrets.GCP_SA_KEY }}' \
-          '{projectId: $project, location: $location, credentials: $creds}' \
-          > .df-credentials.json
+        echo '{
+          "projectId": "${{ env.GCP_PROJECT_ID }}",
+          "location": "${{ env.GCP_REGION }}"
+        }' > .df-credentials.json
 
     - name: Dataform Compile
       working-directory: ./dataform
