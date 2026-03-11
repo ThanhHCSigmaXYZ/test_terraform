@@ -65,6 +65,12 @@ jobs:
           }
         }
         EOF
+        
+    - name: Check credentials file
+      working-directory: ./dataform
+      run: |
+        echo "--- .df-credentials.json content ---"
+        cat .df-credentials.json | jq .
 
     - name: Dataform Compile
       working-directory: ./dataform
