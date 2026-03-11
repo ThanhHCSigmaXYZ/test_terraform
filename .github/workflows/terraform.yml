@@ -54,27 +54,36 @@ jobs:
     - name: Create Dataform credentials
       working-directory: ./dataform
       run: |
-        echo '{
+        TOKEN=$(gcloud auth print-access-token)
+        cat > .df-credentials.json << EOF
+        {
           "projectId": "${{ env.GCP_PROJECT_ID }}",
           "location": "${{ env.GCP_REGION }}",
-          "credentials": ${{ secrets.GCP_SA_KEY }}
-        }' > .df-credentials.json
+          "credentials": {
+            "type": "google_credentials",
+            "token": "${TOKEN}"
+          }
+        }
+        EOF
 
     - name: Dataform Compile
       working-directory: ./dataform
+      shell: bash
       run: |
+        set -o pipefail
         echo "## Dataform Compile" >> $GITHUB_STEP_SUMMARY
         if dataform compile 2>&1 | tee compile_output.txt; then
           echo "PASS: Compiled successfully" >> $GITHUB_STEP_SUMMARY
         else
           echo "FAIL: Compile failed" >> $GITHUB_STEP_SUMMARY
-          cat compile_output.txt
           exit 1
         fi
 
     - name: Dataform Test
       working-directory: ./dataform
+      shell: bash
       run: |
+        set -o pipefail
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "## Dataform Unit Tests" >> $GITHUB_STEP_SUMMARY
         if dataform test 2>&1 | tee test_output.txt; then
