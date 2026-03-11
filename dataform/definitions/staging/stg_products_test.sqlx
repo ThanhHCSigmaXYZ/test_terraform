@@ -1,4 +1,3 @@
-cat > dataform/definitions/staging/stg_products_test.sqlx << 'EOF'
 config {
   type: "test",
   dataset: "stg_products"
@@ -22,4 +21,3 @@ SELECT
   4 AS product_id, 45.0 AS total_price, 1 AS record_count, 45.0 AS average_price, 45.0 AS min_price, 45.0 AS max_price UNION ALL
 SELECT
   5 AS product_id, 50.0 AS total_price, 1 AS record_count, 50.0 AS average_price, 50.0 AS min_price, 50.0 AS max_price
-EOF
