@@ -6,4 +6,4 @@ required data:
 * record_count: count of all record in the table
 * average_price: average of all price data in price column
 * max_price: the highest price among the price column data
-* min_price: the lowest price among the price column data
+* min_price: the cheapest price among the price column data
