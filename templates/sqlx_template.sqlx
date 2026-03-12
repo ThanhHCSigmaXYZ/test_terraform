@@ -1,0 +1,16 @@
+-- Example SQLX file for Dataform
+-- Use this as a reference for generating new SQLX files
+
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "stg_example"
+}
+
+SELECT
+  SUM(value)   AS total_value,
+  COUNT(*)     AS record_count,
+  AVG(value)   AS average_value,
+  MIN(value)   AS min_value,
+  MAX(value)   AS max_value
+FROM ${ref("raw_example")}
