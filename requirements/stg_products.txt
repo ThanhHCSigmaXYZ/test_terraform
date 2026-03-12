@@ -1,4 +1,4 @@
-the table: stg_products
+table: stg_products
 source: raw_products table from aiready dataset
 required data:
 * total_price: sum of all price data in price column
