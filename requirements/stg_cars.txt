@@ -1,0 +1,15 @@
+table name: stg_cars
+
+source: raw_orders table from aiready dataset
+
+columns:
+* order_id
+* sale
+* profit
+
+logic_description:
+* total_sale: sum of all sold units in sale column
+* record_count: count of all record in the table
+* average_profit: average of profit among all sale data 
+* max_profit_order: the highest profit among the sale data
+* min_profit_order: the lowest profit among the sale data

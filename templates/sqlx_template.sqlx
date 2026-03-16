@@ -8,9 +8,36 @@ config {
 }
 
 SELECT
-  SUM(value)   AS total_value,
-  COUNT(*)     AS record_count,
-  AVG(value)   AS average_value,
-  MIN(value)   AS min_value,
-  MAX(value)   AS max_value
-FROM ${ref("raw_example")}
+  -- Direct column selection and renaming
+  id                               AS record_id,
+  name                             AS record_name,
+
+  -- Type casting
+  CAST(amount AS NUMERIC)          AS amount,
+  DATE(created_at)                 AS created_date,
+
+  -- String transformation
+  UPPER(status)                    AS status,
+
+  -- Aggregation
+  SUM(price)                       AS total_price,
+  COUNT(*)                         AS record_count,
+  AVG(price)                       AS average_price,
+  MIN(price)                       AS min_price,
+  MAX(price)                       AS max_price,
+
+  -- Conditional logic
+  CASE
+    WHEN price >= 100 THEN 'high'
+    WHEN price >= 50  THEN 'medium'
+    ELSE 'low'
+  END                              AS price_category,
+
+  -- Reference another source table via JOIN
+  b.category                       AS category
+
+FROM ${ref("raw_example")} AS a
+LEFT JOIN ${ref("raw_category")} AS b
+  ON a.category_id = b.id
+WHERE status IS NOT NULL
+GROUP BY record_id, record_name, amount, created_date, status, price_category, category

@@ -1,0 +1,14 @@
+config {
+  type: 'table',
+  schema: 'dev_dataform_dataset',
+  name: 'stg_cars'
+}
+
+SELECT
+  SUM(sale) AS total_sale,
+  COUNT(*) AS record_count,
+  AVG(profit) AS average_profit,
+  MAX(profit) AS max_profit_order,
+  MIN(profit) AS min_profit_order
+FROM
+  ${ref('raw_orders')}

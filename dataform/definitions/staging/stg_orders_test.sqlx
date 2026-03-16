@@ -1,0 +1,18 @@
+config {
+  type: 'test',
+  dataset: 'stg_orders'
+}
+
+input "raw_orders" {
+  SELECT 1 as order_id, 100 as sale, 20 as profit
+  UNION ALL
+  SELECT 2 as order_id, 150 as sale, 30 as profit
+  UNION ALL
+  SELECT 3 as order_id, 200 as sale, -10 as profit
+  UNION ALL
+  SELECT 4 as order_id, 50 as sale, 5 as profit
+  UNION ALL
+  SELECT 5 as order_id, 120 as sale, 25 as profit
+}
+
+SELECT 620 as total_sale, 5 as record_count, 14.0 as average_profit, 30 as max_profit_order, -10 as min_profit_order
