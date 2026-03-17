@@ -12,7 +12,7 @@ config {
 
 SELECT
   *,
-  CURRENT_TIMESTAMP() AS etl_loaded_at,
-  DATE(CURRENT_TIMESTAMP()) AS etl_loaded_date
+  TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
+  CURRENT_DATE() AS etl_loaded_date
 FROM
   ${ref("mes_equipment_status")}

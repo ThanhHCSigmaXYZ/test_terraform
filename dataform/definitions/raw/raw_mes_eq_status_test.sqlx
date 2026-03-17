@@ -11,8 +11,8 @@ input "mes_equipment_status" {
   SELECT 'log5' as status_log_id, 'equip1' as equipment_id, 'C01' as status_code, CAST('2026-03-17 10:15:00' AS TIMESTAMP) as status_changed_at
 }
 
-  SELECT 'log1' as status_log_id, 'equip1' as equipment_id, 'C01' as status_code, CAST('2026-03-17 10:00:00' AS TIMESTAMP) as status_changed_at, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
-  SELECT 'log2' as status_log_id, 'equip1' as equipment_id, 'C02' as status_code, CAST('2026-03-17 10:05:00' AS TIMESTAMP) as status_changed_at, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
-  SELECT 'log3' as status_log_id, 'equip2' as equipment_id, 'C01' as status_code, CAST('2026-03-17 10:00:00' AS TIMESTAMP) as status_changed_at, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
-  SELECT 'log4' as status_log_id, 'equip2' as equipment_id, 'C03' as status_code, CAST('2026-03-17 10:10:00' AS TIMESTAMP) as status_changed_at, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
-  SELECT 'log5' as status_log_id, 'equip1' as equipment_id, 'C01' as status_code, CAST('2026-03-17 10:15:00' AS TIMESTAMP) as status_changed_at, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+  SELECT 'log1' as status_log_id, 'equip1' as equipment_id, 'C01' as status_code, CAST('2026-03-17 10:00:00' AS TIMESTAMP) as status_changed_at, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'log2' as status_log_id, 'equip1' as equipment_id, 'C02' as status_code, CAST('2026-03-17 10:05:00' AS TIMESTAMP) as status_changed_at, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'log3' as status_log_id, 'equip2' as equipment_id, 'C01' as status_code, CAST('2026-03-17 10:00:00' AS TIMESTAMP) as status_changed_at, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'log4' as status_log_id, 'equip2' as equipment_id, 'C03' as status_code, CAST('2026-03-17 10:10:00' AS TIMESTAMP) as status_changed_at, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'log5' as status_log_id, 'equip1' as equipment_id, 'C01' as status_code, CAST('2026-03-17 10:15:00' AS TIMESTAMP) as status_changed_at, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date

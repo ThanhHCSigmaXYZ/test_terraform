@@ -27,7 +27,7 @@
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | 1 | 統合MES（製造実行システム） | mes_production_order | RDB | 10GB/月 | 毎時 | 差分抽出 | データベース連携 | 有 | raw_mes_prd_order | tmp_mes_prd_order_cleansed | fct_production_performance |
 | 2 | 統合MES（製造実行システム） | mes_equipment_status | RDB | 50GB/月 | 日次 | 差分抽出 | データベース連携 | 有 | raw_mes_eq_status | tmp_mes_eq_status_agg | fct_equipment_downtime |
-| 3 | 工場エッジサーバー（IoT） | cnc_machine_telemetry | JSON | 500GB/日 | 毎時 | 差分抽出 | API連携 | 有 | raw_iot_cnc_telemetry | tmp_iot_cnc_resampled | fct_machine_sensor |
+| 3 | 工場エッジサーバー（IoT） | cnc_machine_telemetry | JSON | 500GB/日 | 毎時 | 差分抽出 | API連携 | 有 | raw_iot_cnc_telemetry | tmp_iot_cnc_resampled | fct_machine_sensor |et
 | 4 | 品質管理システム（QMS） | qms_inspection_result | csv | 5GB/月 | 日次 | 差分抽出 | ファイル連携 | 有 | raw_qms_inspection | tmp_qms_inspection_std | fct_quality_inspection |
 | 5 | 全社ERPシステム | erp_material_master | csv | 2GB | 日次 | 全抽出 | API連携 | 有 | raw_erp_mat_master | tmp_erp_mat_master_scd2 | dim_material |
 | 6 | 全社ERPシステム | erp_worker_master | csv | 100MB | 週次 | 全抽出 | API連携 | 有 | raw_erp_worker_master | tmp_erp_worker_master_scd2 | dim_worker |
