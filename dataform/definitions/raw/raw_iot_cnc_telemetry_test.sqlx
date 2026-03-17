@@ -1,0 +1,18 @@
+config {
+  type: "test",
+  dataset: "raw_iot_cnc_telemetry"
+}
+
+input "cnc_machine_telemetry" {
+  SELECT 'machine1' AS machine_id, TIMESTAMP('2026-03-17 10:00:00') AS timestamp, '{"temp": 100, "vibration": 0.5}' AS payload UNION ALL
+  SELECT 'machine1' AS machine_id, TIMESTAMP('2026-03-17 10:00:01') AS timestamp, '{"temp": 101, "vibration": 0.52}' AS payload UNION ALL
+  SELECT 'machine2' AS machine_id, TIMESTAMP('2026-03-17 10:00:00') AS timestamp, '{"temp": 80, "vibration": 0.2}' AS payload UNION ALL
+  SELECT 'machine1' AS machine_id, TIMESTAMP('2026-03-17 10:00:02') AS timestamp, '{"temp": 102, "vibration": 0.51}' AS payload UNION ALL
+  SELECT 'machine2' AS machine_id, TIMESTAMP('2026-03-17 10:00:01') AS timestamp, '{"temp": 81, "vibration": 0.21}' AS payload
+}
+
+SELECT 'machine1' AS machine_id, TIMESTAMP('2026-03-17 10:00:00') AS timestamp, '{"temp": 100, "vibration": 0.5}' AS payload, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'machine1' AS machine_id, TIMESTAMP('2026-03-17 10:00:01') AS timestamp, '{"temp": 101, "vibration": 0.52}' AS payload, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'machine2' AS machine_id, TIMESTAMP('2026-03-17 10:00:00') AS timestamp, '{"temp": 80, "vibration": 0.2}' AS payload, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'machine1' AS machine_id, TIMESTAMP('2026-03-17 10:00:02') AS timestamp, '{"temp": 102, "vibration": 0.51}' AS payload, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'machine2' AS machine_id, TIMESTAMP('2026-03-17 10:00:01') AS timestamp, '{"temp": 81, "vibration": 0.21}' AS payload, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date

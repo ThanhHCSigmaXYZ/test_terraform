@@ -1,0 +1,21 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_mes_prd_order_cleansed",
+  description: "MES製造実績のクレンジングと型変換",
+  bigquery: {
+    partitionBy: "production_date",
+    clusterBy: ["product_serial_no"]
+  }
+}
+
+SELECT
+  order_id,
+  product_serial_no,
+  SAFE.PARSE_TIMESTAMP('%Y-%m-%d %H:%M:%S', start_time_str) as start_time,
+  SAFE.PARSE_TIMESTAMP('%Y-%m-%d %H:%M:%S', end_time_str) as end_time,
+  DATE(SAFE.PARSE_TIMESTAMP('%Y-%m-%d %H:%M:%S', start_time_str)) as production_date,
+  NORMALIZE(product_id, NFKC) as product_id,
+  COALESCE(work_notes, '') as work_notes
+FROM
+  ${ref("raw_mes_prd_order")}

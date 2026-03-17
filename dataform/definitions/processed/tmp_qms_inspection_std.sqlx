@@ -1,0 +1,22 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_qms_inspection_std",
+  description: "品質検査結果CSVの型変換と単位正規化",
+  bigquery: {
+    partitionBy: "inspection_date",
+    clusterBy: ["product_serial_no"]
+  }
+}
+
+SELECT
+  inspection_id,
+  product_serial_no,
+  SAFE_CAST(inspection_date_str AS DATE FORMAT 'YYYY-MM-DD') AS inspection_date,
+  SAFE_CAST(measurement_a AS FLOAT64) AS measurement_a,
+  CASE
+    WHEN unit_b = 'cm' THEN SAFE_CAST(measurement_b AS FLOAT64) * 10
+    ELSE SAFE_CAST(measurement_b AS FLOAT64)
+  END AS measurement_b_mm
+FROM
+  ${ref("raw_qms_inspection")}

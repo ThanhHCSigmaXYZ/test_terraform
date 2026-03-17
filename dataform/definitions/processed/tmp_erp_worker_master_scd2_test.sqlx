@@ -1,0 +1,19 @@
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+config {
+  type: "test",
+  dataset: "tmp_erp_worker_master_scd2"
+}
+
+input "raw_erp_worker_master" {
+  SELECT 'w1' AS worker_id, 'Worker One' AS worker_name, 'Dept A' AS department UNION ALL
+  SELECT 'w2' AS worker_id, 'Worker Two' AS worker_name, 'Dept B' AS department UNION ALL
+  SELECT 'w3' AS worker_id, 'Worker Three' AS worker_name, 'Dept A' AS department UNION ALL
+  SELECT 'w4' AS worker_id, 'Worker Four' AS worker_name, 'Dept C' AS department UNION ALL
+  SELECT 'w5' AS worker_id, 'Worker Five' AS worker_name, 'Dept B' AS department
+}
+
+SELECT 'w1' AS worker_id, TO_HEX(SHA256('Worker One')) as worker_name_hashed, 'Dept A' AS department, CURRENT_DATE() as valid_from, DATE('9999-12-31') as valid_to, TRUE as is_current UNION ALL
+SELECT 'w2' AS worker_id, TO_HEX(SHA256('Worker Two')) as worker_name_hashed, 'Dept B' AS department, CURRENT_DATE() as valid_from, DATE('9999-12-31') as valid_to, TRUE as is_current UNION ALL
+SELECT 'w3' AS worker_id, TO_HEX(SHA256('Worker Three')) as worker_name_hashed, 'Dept A' AS department, CURRENT_DATE() as valid_from, DATE('9999-12-31') as valid_to, TRUE as is_current UNION ALL
+SELECT 'w4' AS worker_id, TO_HEX(SHA256('Worker Four')) as worker_name_hashed, 'Dept C' AS department, CURRENT_DATE() as valid_from, DATE('9999-12-31') as valid_to, TRUE as is_current UNION ALL
+SELECT 'w5' AS worker_id, TO_HEX(SHA256('Worker Five')) as worker_name_hashed, 'Dept B' AS department, CURRENT_DATE() as valid_from, DATE('9999-12-31') as valid_to, TRUE as is_current

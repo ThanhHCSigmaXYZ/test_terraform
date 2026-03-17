@@ -1,0 +1,21 @@
+-- NOTE: mock data designed for deterministic JOIN results
+config {
+  type: "test",
+  dataset: "fct_machine_sensor"
+}
+
+input "tmp_iot_cnc_resampled" {
+  SELECT 'm1' as machine_id, TIMESTAMP('2026-03-17 10:30:00') as telemetry_timestamp, DATE('2026-03-17') as telemetry_date, 150.0 as avg_temperature, 0.5 as avg_vibration UNION ALL
+  SELECT 'm1' as machine_id, TIMESTAMP('2026-03-17 11:30:00') as telemetry_timestamp, DATE('2026-03-17') as telemetry_date, 155.0 as avg_temperature, 0.52 as avg_vibration UNION ALL
+  SELECT 'm2' as machine_id, TIMESTAMP('2026-03-18 09:30:00') as telemetry_timestamp, DATE('2026-03-18') as telemetry_date, 250.0 as avg_temperature, 0.2 as avg_vibration
+}
+
+-- NOTE: [timestamp_col] is designed to fall between [start_col] and [end_col]
+input "fct_production_performance" {
+  SELECT 'psn1' as product_serial_no, 'm1' as equipment_id, TIMESTAMP('2026-03-17 10:00:00') as start_time, TIMESTAMP('2026-03-17 11:00:00') as end_time UNION ALL
+  SELECT 'psn2' as product_serial_no, 'm2' as equipment_id, TIMESTAMP('2026-03-18 09:00:00') as start_time, TIMESTAMP('2026-03-18 10:00:00') as end_time
+}
+
+SELECT 'm1' as machine_id, TIMESTAMP('2026-03-17 10:30:00') as telemetry_timestamp, DATE('2026-03-17') as telemetry_date, 150.0 as avg_temperature, 0.5 as avg_vibration, 'psn1' as product_serial_no UNION ALL
+SELECT 'm1' as machine_id, TIMESTAMP('2026-03-17 11:30:00') as telemetry_timestamp, DATE('2026-03-17') as telemetry_date, 155.0 as avg_temperature, 0.52 as avg_vibration, NULL as product_serial_no UNION ALL
+SELECT 'm2' as machine_id, TIMESTAMP('2026-03-18 09:30:00') as telemetry_timestamp, DATE('2026-03-18') as telemetry_date, 250.0 as avg_temperature, 0.2 as avg_vibration, 'psn2' as product_serial_no

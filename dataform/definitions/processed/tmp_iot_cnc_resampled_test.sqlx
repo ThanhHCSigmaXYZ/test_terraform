@@ -1,0 +1,17 @@
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+config {
+  type: "test",
+  dataset: "tmp_iot_cnc_resampled"
+}
+
+input "raw_iot_cnc_telemetry" {
+  SELECT 'm1' as machine_id, TIMESTAMP('2026-03-17 10:00:00.100') as timestamp, '{"temperature": 100.0, "vibration": 0.5}' as payload UNION ALL
+  SELECT 'm1' as machine_id, TIMESTAMP('2026-03-17 10:00:00.500') as timestamp, '{"temperature": 102.0, "vibration": 0.6}' as payload UNION ALL
+  SELECT 'm1' as machine_id, TIMESTAMP('2026-03-17 10:00:01.200') as timestamp, '{"temperature": 105.0, "vibration": 0.55}' as payload UNION ALL
+  SELECT 'm2' as machine_id, TIMESTAMP('2026-03-17 10:00:00.300') as timestamp, '{"temperature": 200.0, "vibration": 0.2}' as payload UNION ALL
+  SELECT 'm1' as machine_id, TIMESTAMP('2026-03-17 10:00:00.900') as timestamp, '{"temperature": 9999.0, "vibration": 5.0}' as payload
+}
+
+SELECT 'm1' as machine_id, TIMESTAMP('2026-03-17 10:00:00') as telemetry_timestamp, DATE('2026-03-17') as telemetry_date, (100.0 + 102.0)/2 as avg_temperature, (0.5+0.6)/2 as avg_vibration UNION ALL
+SELECT 'm1' as machine_id, TIMESTAMP('2026-03-17 10:00:01') as telemetry_timestamp, DATE('2026-03-17') as telemetry_date, 105.0 as avg_temperature, 0.55 as avg_vibration UNION ALL
+SELECT 'm2' as machine_id, TIMESTAMP('2026-03-17 10:00:00') as telemetry_timestamp, DATE('2026-03-17') as telemetry_date, 200.0 as avg_temperature, 0.2 as avg_vibration

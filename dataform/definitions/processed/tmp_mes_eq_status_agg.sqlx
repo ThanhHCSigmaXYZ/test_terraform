@@ -1,0 +1,46 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_mes_eq_status_agg",
+  description: "設備状態ログからの稼働・停止時間算出",
+  bigquery: {
+    partitionBy: "status_date",
+    clusterBy: ["equipment_id"]
+  }
+}
+
+WITH
+  normalized_codes AS (
+    SELECT
+      status_log_id,
+      equipment_id,
+      status_changed_at,
+      DATE(status_changed_at) AS status_date,
+      CASE
+        WHEN status_code = 'E-101' THEN 'ERR-GEN'
+        WHEN status_code = 'E-102' THEN 'ERR-MECH'
+        ELSE status_code
+      END AS status_code
+    FROM
+      ${ref("raw_mes_eq_status")}
+  ),
+  lagged_status AS (
+    SELECT
+      *,
+      LAG(status_changed_at, 1) OVER (PARTITION BY equipment_id ORDER BY status_changed_at) AS prev_status_changed_at
+    FROM
+      normalized_codes
+  )
+SELECT
+  status_log_id,
+  equipment_id,
+  status_code,
+  status_date,
+  status_changed_at,
+  TIMESTAMP_DIFF(
+    status_changed_at,
+    prev_status_changed_at,
+    SECOND
+  ) AS duration_sec
+FROM
+  lagged_status

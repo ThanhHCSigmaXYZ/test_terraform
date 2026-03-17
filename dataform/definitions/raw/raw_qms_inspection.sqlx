@@ -1,0 +1,18 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "raw_qms_inspection",
+  description: "QMSからの品質検査結果CSVの取り込み（日次）",
+  bigquery: {
+    partitionBy: "etl_loaded_date",
+    clusterBy: ["inspection_id"]
+  }
+}
+
+SELECT
+  *,
+  TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
+  CURRENT_DATE() AS etl_loaded_date,
+  "unknown" AS source_file_name
+FROM
+  ${ref("qms_inspection_result")}

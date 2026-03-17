@@ -1,0 +1,18 @@
+-- NOTE: mock data designed for deterministic JOIN results
+config {
+  type: "test",
+  dataset: "dim_worker"
+}
+
+input "tmp_erp_worker_master_scd2" {
+  SELECT 'w1' AS worker_id, 'hash1' as worker_name_hashed, 'Dept A' AS department, TRUE AS is_current UNION ALL
+  SELECT 'w2' AS worker_id, 'hash2' as worker_name_hashed, 'Dept B' AS department, TRUE AS is_current UNION ALL
+  SELECT 'w3' AS worker_id, 'hash3old' as worker_name_hashed, 'Dept A' AS department, FALSE AS is_current UNION ALL
+  SELECT 'w3' AS worker_id, 'hash3new' as worker_name_hashed, 'Dept C' AS department, TRUE AS is_current UNION ALL
+  SELECT 'w4' AS worker_id, 'hash4' as worker_name_hashed, 'Dept C' AS department, TRUE AS is_current
+}
+
+SELECT 'w1' AS worker_id, 'hash1' as worker_name_hashed, 'Dept A' AS department UNION ALL
+SELECT 'w2' AS worker_id, 'hash2' as worker_name_hashed, 'Dept B' AS department UNION ALL
+SELECT 'w3' AS worker_id, 'hash3new' as worker_name_hashed, 'Dept C' AS department UNION ALL
+SELECT 'w4' AS worker_id, 'hash4' as worker_name_hashed, 'Dept C' AS department

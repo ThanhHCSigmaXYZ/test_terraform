@@ -1,0 +1,18 @@
+config {
+  type: "test",
+  dataset: "raw_erp_mat_master"
+}
+
+input "erp_material_master" {
+  SELECT 'mat1' AS material_id, 'Material A' AS material_name, 'kg' AS base_unit UNION ALL
+  SELECT 'mat2' AS material_id, 'Material B' AS material_name, 'piece' AS base_unit UNION ALL
+  SELECT 'mat3' AS material_id, 'Material C' AS material_name, 'liter' AS base_unit UNION ALL
+  SELECT 'mat4' AS material_id, 'Material D' AS material_name, 'kg' AS base_unit UNION ALL
+  SELECT 'mat5' AS material_id, 'Material E' AS material_name, 'piece' AS base_unit
+}
+
+SELECT 'mat1' AS material_id, 'Material A' AS material_name, 'kg' AS base_unit, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'mat2' AS material_id, 'Material B' AS material_name, 'piece' AS base_unit, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'mat3' AS material_id, 'Material C' AS material_name, 'liter' AS base_unit, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'mat4' AS material_id, 'Material D' AS material_name, 'kg' AS base_unit, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'mat5' AS material_id, 'Material E' AS material_name, 'piece' AS base_unit, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date

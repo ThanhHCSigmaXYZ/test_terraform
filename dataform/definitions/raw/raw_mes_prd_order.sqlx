@@ -1,0 +1,17 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "raw_mes_prd_order",
+  description: "MESからの製造実績データの取り込み（日次差分）",
+  bigquery: {
+    partitionBy: "etl_loaded_date",
+    clusterBy: ["order_id"]
+  }
+}
+
+SELECT
+  *,
+  TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
+  CURRENT_DATE() AS etl_loaded_date
+FROM
+  ${ref("mes_production_order")}

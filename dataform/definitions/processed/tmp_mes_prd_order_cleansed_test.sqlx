@@ -1,0 +1,20 @@
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+config {
+  type: "test",
+  dataset: "tmp_mes_prd_order_cleansed"
+}
+
+input "raw_mes_prd_order" {
+  SELECT 'o1' AS order_id, 'psn1' AS product_serial_no, '2026-03-17 10:00:00' AS start_time_str, '2026-03-17 11:00:00' AS end_time_str, 'PROD-Ａ' AS product_id, NULL AS work_notes UNION ALL
+  SELECT 'o2' AS order_id, 'psn2' AS product_serial_no, '2026-03-17 12:00:00' AS start_time_str, '2026-03-17 13:00:00' AS end_time_str, 'ＰＲＯＤ-Ｂ' AS product_id, 'notes' AS work_notes UNION ALL
+  SELECT 'o3' AS order_id, 'psn3' AS product_serial_no, '2026-03-17 14:00:00' AS start_time_str, '2026-03-17 15:00:00' AS end_time_str, 'PROD-C' AS product_id, 'some notes' AS work_notes UNION ALL
+  SELECT 'o4' AS order_id, 'psn4' AS product_serial_no, '2026-03-18 10:00:00' AS start_time_str, '2026-03-18 11:00:00' AS end_time_str, 'prod-d' AS product_id, NULL AS work_notes UNION ALL
+  SELECT 'o5' AS order_id, 'psn5' AS product_serial_no, '2026-03-18 12:00:00' AS start_time_str, '2026-03-18 13:00:00' AS end_time_str, 'PROD-E' AS product_id, '' AS work_notes
+}
+
+SELECT
+  'o1' as order_id, 'psn1' as product_serial_no, TIMESTAMP('2026-03-17 10:00:00') as start_time, TIMESTAMP('2026-03-17 11:00:00') as end_time, DATE('2026-03-17') as production_date, 'PROD-A' as product_id, '' as work_notes UNION ALL
+  SELECT 'o2' as order_id, 'psn2' as product_serial_no, TIMESTAMP('2026-03-17 12:00:00') as start_time, TIMESTAMP('2026-03-17 13:00:00') as end_time, DATE('2026-03-17') as production_date, 'PROD-B' as product_id, 'notes' as work_notes UNION ALL
+  SELECT 'o3' as order_id, 'psn3' as product_serial_no, TIMESTAMP('2026-03-17 14:00:00') as start_time, TIMESTAMP('2026-03-17 15:00:00') as end_time, DATE('2026-03-17') as production_date, 'PROD-C' as product_id, 'some notes' as work_notes UNION ALL
+  SELECT 'o4' as order_id, 'psn4' as product_serial_no, TIMESTAMP('2026-03-18 10:00:00') as start_time, TIMESTAMP('2026-03-18 11:00:00') as end_time, DATE('2026-03-18') as production_date, 'prod-d' as product_id, '' as work_notes UNION ALL
+  SELECT 'o5' as order_id, 'psn5' as product_serial_no, TIMESTAMP('2026-03-18 12:00:00') as start_time, TIMESTAMP('2026-03-18 13:00:00') as end_time, DATE('2026-03-18') as production_date, 'PROD-E' as product_id, '' as work_notes

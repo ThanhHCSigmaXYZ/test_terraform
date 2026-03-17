@@ -1,0 +1,18 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "dim_worker",
+  description: "作業者ディメンションテーブル",
+  bigquery: {
+    clusterBy: ["worker_id"]
+  }
+}
+
+SELECT
+  worker_id,
+  worker_name_hashed,
+  department
+FROM
+  ${ref("tmp_erp_worker_master_scd2")}
+WHERE
+  is_current = TRUE

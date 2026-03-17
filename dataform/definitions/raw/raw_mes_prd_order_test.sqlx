@@ -1,0 +1,18 @@
+config {
+  type: "test",
+  dataset: "raw_mes_prd_order"
+}
+
+input "mes_production_order" {
+  SELECT 'order1' AS order_id, 'serial1' AS product_serial_no, 'prod_A' AS product_id, 10 AS quantity UNION ALL
+  SELECT 'order2' AS order_id, 'serial2' AS product_serial_no, 'prod_B' AS product_id, 20 AS quantity UNION ALL
+  SELECT 'order3' AS order_id, 'serial3' AS product_serial_no, 'prod_A' AS product_id, 30 AS quantity UNION ALL
+  SELECT 'order4' AS order_id, 'serial4' AS product_serial_no, 'prod_C' AS product_id, 40 AS quantity UNION ALL
+  SELECT 'order5' AS order_id, 'serial5' AS product_serial_no, 'prod_B' AS product_id, 50 AS quantity
+}
+
+SELECT 'order1' AS order_id, 'serial1' AS product_serial_no, 'prod_A' AS product_id, 10 AS quantity, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'order2' AS order_id, 'serial2' AS product_serial_no, 'prod_B' AS product_id, 20 AS quantity, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'order3' AS order_id, 'serial3' AS product_serial_no, 'prod_A' AS product_id, 30 AS quantity, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'order4' AS order_id, 'serial4' AS product_serial_no, 'prod_C' AS product_id, 40 AS quantity, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'order5' AS order_id, 'serial5' AS product_serial_no, 'prod_B' AS product_id, 50 AS quantity, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date

@@ -1,0 +1,29 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_erp_worker_master_scd2",
+  description: "作業者マスタのSCD Type2処理（履歴化）。注：これはSCD2の簡易版です。",
+  bigquery: {
+    clusterBy: ["worker_id"]
+  }
+}
+
+-- NOTE: This is a simplified implementation for a Slowly Changing Dimension (SCD) Type 2.
+-- A full implementation, which tracks historical changes, typically requires either:
+-- 1. An incremental Dataform table (`type: "incremental"`) to compare new data with existing records.
+-- 2. `pre_operations` with `MERGE` statements to update old records and insert new ones.
+--
+-- Since the project constraints require `type: "table"` and do not specify `pre_operations`,
+-- this query snapshots the latest data from the source, adding SCD columns.
+-- It does NOT preserve history from previous runs. It identifies the current records.
+-- Personal information (worker_name) is hashed for security.
+
+SELECT
+  worker_id,
+  TO_HEX(SHA256(worker_name)) as worker_name_hashed,
+  department,
+  CURRENT_DATE() as valid_from,
+  DATE('9999-12-31') as valid_to,
+  TRUE as is_current
+FROM
+  ${ref("raw_erp_worker_master")}

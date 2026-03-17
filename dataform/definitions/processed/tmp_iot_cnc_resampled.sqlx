@@ -1,0 +1,50 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_iot_cnc_resampled",
+  description: "IoTデータ（JSON）の展開とダウンサンプリング",
+  bigquery: {
+    partitionBy: "telemetry_date",
+    clusterBy: ["machine_id"]
+  }
+}
+
+WITH
+  extracted_json AS (
+    SELECT
+      machine_id,
+      timestamp,
+      SAFE.JSON_EXTRACT_SCALAR(payload, '$.temperature') AS temperature_str,
+      SAFE.JSON_EXTRACT_SCALAR(payload, '$.vibration') AS vibration_str
+    FROM
+      ${ref("raw_iot_cnc_telemetry")}
+  ),
+  typed_data AS (
+    SELECT
+      machine_id,
+      timestamp,
+      SAFE_CAST(temperature_str AS FLOAT64) AS temperature,
+      SAFE_CAST(vibration_str AS FLOAT64) AS vibration
+    FROM
+      extracted_json
+  ),
+  filtered_data AS (
+    SELECT
+      *
+    FROM
+      typed_data
+    WHERE
+      temperature < 9000 -- Remove extreme outliers
+  )
+SELECT
+  machine_id,
+  TIMESTAMP_TRUNC(timestamp, SECOND) AS telemetry_timestamp,
+  DATE(TIMESTAMP_TRUNC(timestamp, SECOND)) as telemetry_date,
+  AVG(temperature) AS avg_temperature,
+  AVG(vibration) AS avg_vibration
+FROM
+  filtered_data
+GROUP BY
+  1,
+  2,
+  3

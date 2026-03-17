@@ -1,0 +1,19 @@
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+config {
+  type: "test",
+  dataset: "tmp_qms_inspection_std"
+}
+
+input "raw_qms_inspection" {
+  SELECT 'insp1' as inspection_id, 'psn1' as product_serial_no, '2026-03-17' as inspection_date_str, '10.5' as measurement_a, '2.5' as measurement_b, 'cm' as unit_b UNION ALL
+  SELECT 'insp2' as inspection_id, 'psn2' as product_serial_no, '2026-03-17' as inspection_date_str, '11.0' as measurement_a, '25.1' as measurement_b, 'mm' as unit_b UNION ALL
+  SELECT 'insp3' as inspection_id, 'psn3' as product_serial_no, '2026-03-18' as inspection_date_str, '9.8' as measurement_a, 'invalid' as measurement_b, 'cm' as unit_b UNION ALL
+  SELECT 'insp4' as inspection_id, 'psn4' as product_serial_no, '2026-03-18' as inspection_date_str, '10.2' as measurement_a, '2.2' as measurement_b, 'cm' as unit_b UNION ALL
+  SELECT 'insp5' as inspection_id, 'psn5' as product_serial_no, '2026-03-19' as inspection_date_str, '10.5' as measurement_a, '25.5' as measurement_b, 'mm' as unit_b
+}
+
+SELECT 'insp1' as inspection_id, 'psn1' as product_serial_no, DATE('2026-03-17') as inspection_date, 10.5 as measurement_a, 25.0 as measurement_b_mm UNION ALL
+SELECT 'insp2' as inspection_id, 'psn2' as product_serial_no, DATE('2026-03-17') as inspection_date, 11.0 as measurement_a, 25.1 as measurement_b_mm UNION ALL
+SELECT 'insp3' as inspection_id, 'psn3' as product_serial_no, DATE('2026-03-18') as inspection_date, 9.8 as measurement_a, NULL as measurement_b_mm UNION ALL
+SELECT 'insp4' as inspection_id, 'psn4' as product_serial_no, DATE('2026-03-18') as inspection_date, 10.2 as measurement_a, 22.0 as measurement_b_mm UNION ALL
+SELECT 'insp5' as inspection_id, 'psn5' as product_serial_no, DATE('2026-03-19') as inspection_date, 10.5 as measurement_a, 25.5 as measurement_b_mm

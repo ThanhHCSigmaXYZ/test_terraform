@@ -1,0 +1,18 @@
+config {
+  type: "test",
+  dataset: "raw_erp_worker_master"
+}
+
+input "erp_worker_master" {
+  SELECT 'w1' AS worker_id, 'Worker One' AS worker_name, 'Dept A' AS department UNION ALL
+  SELECT 'w2' AS worker_id, 'Worker Two' AS worker_name, 'Dept B' AS department UNION ALL
+  SELECT 'w3' AS worker_id, 'Worker Three' AS worker_name, 'Dept A' AS department UNION ALL
+  SELECT 'w4' AS worker_id, 'Worker Four' AS worker_name, 'Dept C' AS department UNION ALL
+  SELECT 'w5' AS worker_id, 'Worker Five' AS worker_name, 'Dept B' AS department
+}
+
+SELECT 'w1' AS worker_id, 'Worker One' AS worker_name, 'Dept A' AS department, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'w2' AS worker_id, 'Worker Two' AS worker_name, 'Dept B' AS department, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'w3' AS worker_id, 'Worker Three' AS worker_name, 'Dept A' AS department, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'w4' AS worker_id, 'Worker Four' AS worker_name, 'Dept C' AS department, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'w5' AS worker_id, 'Worker Five' AS worker_name, 'Dept B' AS department, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
