@@ -1,0 +1,24 @@
+-- NOTE: mock data designed for deterministic JOIN results
+config {
+  type: "test",
+  dataset: "fct_machine_sensor"
+}
+
+input "tmp_iot_cnc_resampled" {
+  -- Sensor reading within production time
+  SELECT 'machine1' as machine_id, CAST('2026-03-17 10:30:00' AS TIMESTAMP) AS telemetry_timestamp, DATE '2026-03-17' as telemetry_date, 55.0 as avg_temperature, 0.25 as avg_vibration UNION ALL
+  -- Sensor reading outside production time
+  SELECT 'machine1' as machine_id, CAST('2026-03-17 11:30:00' AS TIMESTAMP) AS telemetry_timestamp, DATE '2026-03-17' as telemetry_date, 52.0 as avg_temperature, 0.22 as avg_vibration
+}
+
+input "fct_production_performance" {
+  -- NOTE: telemetry_timestamp '10:30:00' is designed to fall between start_time and end_time
+  SELECT 'psn1' as product_serial_no, 'machine1' as machine_id, CAST('2026-03-17 10:00:00' AS TIMESTAMP) as start_time, CAST('2026-03-17 11:00:00' AS TIMESTAMP) as end_time
+}
+
+expected {
+  -- First sensor reading joins
+  SELECT 'machine1' as machine_id, CAST('2026-03-17 10:30:00' AS TIMESTAMP) AS telemetry_timestamp, DATE '2026-03-17' as telemetry_date, 55.0 as avg_temperature, 0.25 as avg_vibration, 'psn1' as product_serial_no UNION ALL
+  -- Second sensor reading does not join
+  SELECT 'machine1' as machine_id, CAST('2026-03-17 11:30:00' AS TIMESTAMP) AS telemetry_timestamp, DATE '2026-03-17' as telemetry_date, 52.0 as avg_temperature, 0.22 as avg_vibration, CAST(NULL AS STRING) as product_serial_no
+}

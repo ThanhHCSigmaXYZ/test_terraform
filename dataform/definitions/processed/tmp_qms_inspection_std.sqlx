@@ -1,0 +1,27 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_qms_inspection_std",
+  description: "品質検査結果CSVの型変換と単位正規化",
+  tags: ["processed"],
+  bigquery: {
+    partitionBy: "inspection_date",
+    clusterBy: ["product_serial_no"]
+  }
+}
+
+SELECT
+  inspection_id,
+  product_serial_no,
+  -- CSVの全カラムに対し、適切なデータ型（Date, Float, Int等）へのキャストを実施
+  CAST(inspection_date_str AS DATE) AS inspection_date,
+  CAST(inspection_value_str AS FLOAT64) AS inspection_value,
+  -- 単位が異なる検査項目（mmとcmなど）を標準単位に換算して統一
+  CASE
+    WHEN inspection_unit = 'mm' THEN CAST(inspection_value_str AS FLOAT64) / 10
+    WHEN inspection_unit = 'cm' THEN CAST(inspection_value_str AS FLOAT64)
+    ELSE NULL
+  END AS inspection_value_cm,
+  * EXCEPT(inspection_id, product_serial_no, inspection_date_str, inspection_value_str, inspection_unit)
+FROM
+  ${ref("raw_qms_inspection")}

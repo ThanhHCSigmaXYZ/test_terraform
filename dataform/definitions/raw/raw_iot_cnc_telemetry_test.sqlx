@@ -1,0 +1,21 @@
+-- NOTE: etl_loaded_at excluded from expected output (non-deterministic)
+config {
+  type: "test",
+  dataset: "raw_iot_cnc_telemetry"
+}
+
+input "cnc_machine_telemetry" {
+  SELECT 'machine1' as machine_id, CAST('2026-03-17 10:00:00' AS TIMESTAMP) as timestamp, '{"temp": 25.5, "vibration": 0.1}' as payload UNION ALL
+  SELECT 'machine1' as machine_id, CAST('2026-03-17 10:00:01' AS TIMESTAMP) as timestamp, '{"temp": 25.6, "vibration": 0.12}' as payload UNION ALL
+  SELECT 'machine2' as machine_id, CAST('2026-03-17 10:00:00' AS TIMESTAMP) as timestamp, '{"temp": 30.1, "vibration": 0.5}' as payload UNION ALL
+  SELECT 'machine2' as machine_id, CAST('2026-03-17 10:00:01' AS TIMESTAMP) as timestamp, '{"temp": 30.0, "vibration": 0.49}' as payload UNION ALL
+  SELECT 'machine1' as machine_id, CAST('2026-03-17 10:00:02' AS TIMESTAMP) as timestamp, '{"temp": 25.7, "vibration": 0.11}' as payload
+}
+
+expected {
+  SELECT 'machine1' as machine_id, CAST('2026-03-17 10:00:00' AS TIMESTAMP) as timestamp, '{"temp": 25.5, "vibration": 0.1}' as payload UNION ALL
+  SELECT 'machine1' as machine_id, CAST('2026-03-17 10:00:01' AS TIMESTAMP) as timestamp, '{"temp": 25.6, "vibration": 0.12}' as payload UNION ALL
+  SELECT 'machine2' as machine_id, CAST('2026-03-17 10:00:00' AS TIMESTAMP) as timestamp, '{"temp": 30.1, "vibration": 0.5}' as payload UNION ALL
+  SELECT 'machine2' as machine_id, CAST('2026-03-17 10:00:01' AS TIMESTAMP) as timestamp, '{"temp": 30.0, "vibration": 0.49}' as payload UNION ALL
+  SELECT 'machine1' as machine_id, CAST('2026-03-17 10:00:02' AS TIMESTAMP) as timestamp, '{"temp": 25.7, "vibration": 0.11}' as payload
+}

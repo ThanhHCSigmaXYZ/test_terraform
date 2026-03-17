@@ -1,0 +1,21 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "fct_machine_sensor",
+  description: "センサー推移分析用のファクトテーブル",
+  tags: ["access", "fact"],
+  bigquery: {
+    partitionBy: "telemetry_date",
+    clusterBy: ["product_serial_no", "machine_id"]
+  }
+}
+
+SELECT
+  sensor.*,
+  prod.product_serial_no
+FROM
+  ${ref("tmp_iot_cnc_resampled")} AS sensor
+LEFT JOIN
+  ${ref("fct_production_performance")} AS prod
+  ON sensor.machine_id = prod.machine_id -- Assuming machine_id is in fct_production_performance
+  AND sensor.telemetry_timestamp BETWEEN prod.start_time AND prod.end_time

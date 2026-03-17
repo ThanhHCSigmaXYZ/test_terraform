@@ -1,0 +1,48 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_mes_eq_status_agg",
+  description: "設備状態ログからの稼働・停止時間算出",
+  tags: ["processed"],
+  bigquery: {
+    partitionBy: "status_date",
+    clusterBy: ["equipment_id"]
+  }
+}
+
+WITH
+  error_code_normalized AS (
+    SELECT
+      *,
+      -- Step1(正規化): エラーコードの工場間の体系差異を変換し統一 (Assuming some logic)
+      CASE
+        WHEN status_code LIKE 'A-%' THEN 'STD-' || SUBSTR(status_code, 3)
+        WHEN status_code LIKE 'B-%' THEN 'STD-' || SUBSTR(status_code, 3)
+        ELSE status_code
+      END AS status_code_normalized,
+      DATE(status_changed_at) as status_date
+    FROM
+      ${ref("raw_mes_eq_status")}
+  ),
+  sequence_applied AS (
+    SELECT
+      *,
+      -- Step2(順序付): LAG関数を用い、同一設備(equipment_id)の「1つ前のステータス変化時刻」を取得
+      LAG(status_changed_at, 1, status_changed_at) OVER (
+        PARTITION BY equipment_id
+        ORDER BY
+          status_changed_at
+      ) AS prev_status_changed_at
+    FROM
+      error_code_normalized
+  )
+SELECT
+  *,
+  -- Step3(算出): 現在の時刻とStep2の時刻の差分から「継続時間(秒)」を算出しカラムを追加
+  TIMESTAMP_DIFF(
+    status_changed_at,
+    prev_status_changed_at,
+    SECOND
+  ) AS duration_sec
+FROM
+  sequence_applied

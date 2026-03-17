@@ -1,0 +1,21 @@
+config {
+  type: "test",
+  dataset: "tmp_qms_inspection_std"
+}
+
+input "raw_qms_inspection" {
+  SELECT 'insp1' as inspection_id, 'psn1' as product_serial_no, '2026-03-17' as inspection_date_str, '50' as inspection_value_str, 'mm' as inspection_unit UNION ALL
+  SELECT 'insp2' as inspection_id, 'psn1' as product_serial_no, '2026-03-17' as inspection_date_str, '6' as inspection_value_str, 'cm' as inspection_unit UNION ALL
+  SELECT 'insp3' as inspection_id, 'psn2' as product_serial_no, '2026-03-18' as inspection_date_str, '55' as inspection_value_str, 'mm' as inspection_unit UNION ALL
+  SELECT 'insp4' as inspection_id, 'psn3' as product_serial_no, '2026-03-18' as inspection_date_str, '7.2' as inspection_value_str, 'cm' as inspection_unit UNION ALL
+  SELECT 'insp5' as inspection_id, 'psn3' as product_serial_no, '2026-03-18' as inspection_date_str, '75' as inspection_value_str, 'mm' as inspection_unit
+}
+
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+expected {
+  SELECT 'insp1' as inspection_id, 'psn1' as product_serial_no, DATE '2026-03-17' AS inspection_date, 50.0 as inspection_value, 5.0 as inspection_value_cm UNION ALL
+  SELECT 'insp2' as inspection_id, 'psn1' as product_serial_no, DATE '2026-03-17' AS inspection_date, 6.0 as inspection_value, 6.0 as inspection_value_cm UNION ALL
+  SELECT 'insp3' as inspection_id, 'psn2' as product_serial_no, DATE '2026-03-18' AS inspection_date, 55.0 as inspection_value, 5.5 as inspection_value_cm UNION ALL
+  SELECT 'insp4' as inspection_id, 'psn3' as product_serial_no, DATE '2026-03-18' AS inspection_date, 7.2 as inspection_value, 7.2 as inspection_value_cm UNION ALL
+  SELECT 'insp5' as inspection_id, 'psn3' as product_serial_no, DATE '2026-03-18' AS inspection_date, 75.0 as inspection_value, 7.5 as inspection_value_cm
+}

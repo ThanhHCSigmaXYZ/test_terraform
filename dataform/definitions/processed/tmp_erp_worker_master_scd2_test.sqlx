@@ -1,0 +1,21 @@
+config {
+  type: "test",
+  dataset: "tmp_erp_worker_master_scd2"
+}
+
+input "raw_erp_worker_master" {
+  -- w1: name changes once
+  SELECT 'w1' as worker_id, 'Sato' as worker_name, CAST('2026-01-15 10:00:00' AS TIMESTAMP) as etl_loaded_at UNION ALL
+  SELECT 'w1' as worker_id, 'Sato Ken' as worker_name, CAST('2026-02-20 10:00:00' AS TIMESTAMP) as etl_loaded_at UNION ALL
+  -- w2: no changes
+  SELECT 'w2' as worker_id, 'Tanaka' as worker_name, CAST('2026-01-20 10:00:00' AS TIMESTAMP) as etl_loaded_at
+}
+
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+expected {
+  -- w1 history
+  SELECT 'w1' as worker_id, 'Sato' as worker_name,     CAST('2026-01-15 10:00:00' AS TIMESTAMP) as valid_from, CAST('2026-02-20 10:00:00' AS TIMESTAMP) as valid_to, false as is_current UNION ALL
+  SELECT 'w1' as worker_id, 'Sato Ken' as worker_name, CAST('2026-02-20 10:00:00' AS TIMESTAMP) as valid_from, CAST('9999-12-31 23:59:59' AS TIMESTAMP) as valid_to, true as is_current UNION ALL
+  -- w2 history (no changes)
+  SELECT 'w2' as worker_id, 'Tanaka' as worker_name,   CAST('2026-01-20 10:00:00' AS TIMESTAMP) as valid_from, CAST('9999-12-31 23:59:59' AS TIMESTAMP) as valid_to, true as is_current
+}

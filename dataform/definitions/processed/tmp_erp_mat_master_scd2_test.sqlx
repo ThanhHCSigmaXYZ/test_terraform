@@ -1,0 +1,28 @@
+config {
+  type: "test",
+  dataset: "tmp_erp_mat_master_scd2"
+}
+
+input "raw_erp_mat_master" {
+  -- mat1: name changes once
+  SELECT 'mat1' as material_id, 'Steel' as material_name, CAST('2026-01-15 10:00:00' AS TIMESTAMP) as etl_loaded_at UNION ALL
+  SELECT 'mat1' as material_id, 'Stainless Steel' as material_name, CAST('2026-02-20 10:00:00' AS TIMESTAMP) as etl_loaded_at UNION ALL
+  -- mat2: no changes
+  SELECT 'mat2' as material_id, 'Aluminum' as material_name, CAST('2026-01-20 10:00:00' AS TIMESTAMP) as etl_loaded_at UNION ALL
+  -- mat3: added late
+  SELECT 'mat3' as material_id, 'Copper' as material_name, CAST('2026-03-01 10:00:00' AS TIMESTAMP) as etl_loaded_at UNION ALL
+  -- mat1: another change
+  SELECT 'mat1' as material_id, 'AISI 304 Steel' as material_name, CAST('2026-03-10 10:00:00' AS TIMESTAMP) as etl_loaded_at
+}
+
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+expected {
+  -- mat1 history
+  SELECT 'mat1' as material_id, 'Steel' as material_name,           CAST('2026-01-15 10:00:00' AS TIMESTAMP) as valid_from, CAST('2026-02-20 10:00:00' AS TIMESTAMP) as valid_to, false as is_current UNION ALL
+  SELECT 'mat1' as material_id, 'Stainless Steel' as material_name, CAST('2026-02-20 10:00:00' AS TIMESTAMP) as valid_from, CAST('2026-03-10 10:00:00' AS TIMESTAMP) as valid_to, false as is_current UNION ALL
+  SELECT 'mat1' as material_id, 'AISI 304 Steel' as material_name,  CAST('2026-03-10 10:00:00' AS TIMESTAMP) as valid_from, CAST('9999-12-31 23:59:59' AS TIMESTAMP) as valid_to, true as is_current UNION ALL
+  -- mat2 history (no changes)
+  SELECT 'mat2' as material_id, 'Aluminum' as material_name,       CAST('2026-01-20 10:00:00' AS TIMESTAMP) as valid_from, CAST('9999-12-31 23:59:59' AS TIMESTAMP) as valid_to, true as is_current UNION ALL
+  -- mat3 history
+  SELECT 'mat3' as material_id, 'Copper' as material_name,         CAST('2026-03-01 10:00:00' AS TIMESTAMP) as valid_from, CAST('9999-12-31 23:59:59' AS TIMESTAMP) as valid_to, true as is_current
+}

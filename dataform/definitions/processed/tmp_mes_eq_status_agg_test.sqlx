@@ -1,0 +1,25 @@
+config {
+  type: "test",
+  dataset: "tmp_mes_eq_status_agg"
+}
+
+input "raw_mes_eq_status" {
+  -- equip1: 3 status changes
+  SELECT 'log1' as status_log_id, 'equip1' as equipment_id, 'A-101' as status_code, CAST('2026-03-17 10:00:00' AS TIMESTAMP) as status_changed_at UNION ALL
+  SELECT 'log2' as status_log_id, 'equip1' as equipment_id, 'B-202' as status_code, CAST('2026-03-17 10:05:30' AS TIMESTAMP) as status_changed_at UNION ALL
+  SELECT 'log3' as status_log_id, 'equip1' as equipment_id, 'OK' as status_code,    CAST('2026-03-17 10:06:00' AS TIMESTAMP) as status_changed_at UNION ALL
+  -- equip2: 2 status changes
+  SELECT 'log4' as status_log_id, 'equip2' as equipment_id, 'A-101' as status_code, CAST('2026-03-17 08:00:00' AS TIMESTAMP) as status_changed_at UNION ALL
+  SELECT 'log5' as status_log_id, 'equip2' as equipment_id, 'C-303' as status_code, CAST('2026-03-17 09:30:00' AS TIMESTAMP) as status_changed_at
+}
+
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+expected {
+  -- equip1 results
+  SELECT 'log1' as status_log_id, 'equip1' as equipment_id, 'A-101' as status_code, CAST('2026-03-17 10:00:00' AS TIMESTAMP) as status_changed_at, 'STD-101' as status_code_normalized, DATE('2026-03-17') as status_date, CAST('2026-03-17 10:00:00' AS TIMESTAMP) as prev_status_changed_at, 0 as duration_sec UNION ALL
+  SELECT 'log2' as status_log_id, 'equip1' as equipment_id, 'B-202' as status_code, CAST('2026-03-17 10:05:30' AS TIMESTAMP) as status_changed_at, 'STD-202' as status_code_normalized, DATE('2026-03-17') as status_date, CAST('2026-03-17 10:00:00' AS TIMESTAMP) as prev_status_changed_at, 330 as duration_sec UNION ALL
+  SELECT 'log3' as status_log_id, 'equip1' as equipment_id, 'OK' as status_code,    CAST('2026-03-17 10:06:00' AS TIMESTAMP) as status_changed_at, 'OK' as status_code_normalized, DATE('2026-03-17') as status_date, CAST('2026-03-17 10:05:30' AS TIMESTAMP) as prev_status_changed_at, 30 as duration_sec UNION ALL
+  -- equip2 results
+  SELECT 'log4' as status_log_id, 'equip2' as equipment_id, 'A-101' as status_code, CAST('2026-03-17 08:00:00' AS TIMESTAMP) as status_changed_at, 'STD-101' as status_code_normalized, DATE('2026-03-17') as status_date, CAST('2026-03-17 08:00:00' AS TIMESTAMP) as prev_status_changed_at, 0 as duration_sec UNION ALL
+  SELECT 'log5' as status_log_id, 'equip2' as equipment_id, 'C-303' as status_code, CAST('2026-03-17 09:30:00' AS TIMESTAMP) as status_changed_at, 'C-303' as status_code_normalized, DATE('2026-03-17') as status_date, CAST('2026-03-17 08:00:00' AS TIMESTAMP) as prev_status_changed_at, 5400 as duration_sec
+}
