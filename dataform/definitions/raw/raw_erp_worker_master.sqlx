@@ -2,10 +2,7 @@ config {
   type: "table",
   schema: "dev_dataform_dataset",
   name: "raw_erp_worker_master",
-  description: "作業者マスタの取り込み",
-  bigquery: {
-    partitionBy: "etl_loaded_date"
-  }
+  tags: ["raw"]
 }
 
 SELECT

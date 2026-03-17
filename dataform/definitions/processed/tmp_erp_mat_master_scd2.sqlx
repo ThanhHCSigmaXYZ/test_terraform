@@ -1,28 +1,42 @@
 config {
-  type: "table",
+  type: "incremental",
   schema: "dev_dataform_dataset",
   name: "tmp_erp_mat_master_scd2",
-  description: "品目マスタのSCD Type2処理（履歴化）。注：これはSCD2の簡易版です。",
+  tags: ["processed"],
+  uniqueKey: ["material_id", "valid_from"],
   bigquery: {
     clusterBy: ["material_id"]
   }
 }
 
--- NOTE: This is a simplified implementation for a Slowly Changing Dimension (SCD) Type 2.
--- A full implementation, which tracks historical changes, typically requires either:
--- 1. An incremental Dataform table (`type: "incremental"`) to compare new data with existing records.
--- 2. `pre_operations` with `MERGE` statements to update old records and insert new ones.
---
--- Since the project constraints require `type: "table"` and do not specify `pre_operations`,
--- this query snapshots the latest data from the source, adding SCD columns.
--- It does NOT preserve history from previous runs. It identifies the current records.
-
-SELECT
-  material_id,
-  material_name,
-  base_unit,
-  CURRENT_DATE() as valid_from,
-  DATE('9999-12-31') as valid_to,
-  TRUE as is_current
-FROM
-  ${ref("raw_erp_mat_master")}
+-- Step 1: Union new/changed records with existing records
+WITH all_records AS (
+    SELECT
+        material_id,
+        material_name,
+        etl_loaded_at,
+        LEAD(etl_loaded_at, 1, TIMESTAMP('9999-12-31 23:59:59')) OVER (PARTITION BY material_id ORDER BY etl_loaded_at) AS next_etl_loaded_at
+    FROM ${ref("raw_erp_mat_master")}
+    
+    ${when(incremental(), `
+        UNION ALL
+        SELECT
+            material_id,
+            material_name,
+            valid_from AS etl_loaded_at,
+            TIMESTAMP_SUB(valid_to, INTERVAL 1 MICROSECOND) AS next_etl_loaded_at
+        FROM ${self}
+        WHERE is_current
+    `)}
+),
+-- Step 2: Detect changes and set validity dates
+changes AS (
+    SELECT
+        material_id,
+        material_name,
+        etl_loaded_at AS valid_from,
+        next_etl_loaded_at AS valid_to,
+        (ROW_NUMBER() OVER (PARTITION BY material_id ORDER BY etl_loaded_at DESC) = 1) AS is_current
+    FROM all_records
+)
+SELECT * FROM changes

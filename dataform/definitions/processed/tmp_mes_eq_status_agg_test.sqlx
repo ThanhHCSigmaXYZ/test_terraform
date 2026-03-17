@@ -1,19 +1,28 @@
--- NOTE: expected output derived from mock data — verify if transformation logic changes
 config {
   type: "test",
   dataset: "tmp_mes_eq_status_agg"
 }
 
 input "raw_mes_eq_status" {
-  SELECT 'log1' AS status_log_id, 'equip1' AS equipment_id, 'RUN' AS status_code, TIMESTAMP('2026-03-17 10:00:00') AS status_changed_at UNION ALL
-  SELECT 'log2' AS status_log_id, 'equip1' AS equipment_id, 'STOP' AS status_code, TIMESTAMP('2026-03-17 10:05:00') AS status_changed_at UNION ALL
-  SELECT 'log3' AS status_log_id, 'equip2' AS equipment_id, 'RUN' AS status_code, TIMESTAMP('2026-03-17 10:00:00') AS status_changed_at UNION ALL
-  SELECT 'log4' AS status_log_id, 'equip1' AS equipment_id, 'E-101' AS status_code, TIMESTAMP('2026-03-17 10:15:00') AS status_changed_at UNION ALL
-  SELECT 'log5' AS status_log_id, 'equip2' AS equipment_id, 'E-102' AS status_code, TIMESTAMP('2026-03-17 10:20:00') AS status_changed_at
+  SELECT 'log1' AS status_log_id, 'eq1' AS equipment_id, 'C01' AS status_code, TIMESTAMP('2023-01-01 10:00:00') AS status_changed_at UNION ALL
+  SELECT 'log2' AS status_log_id, 'eq1' AS equipment_id, 'C02' AS status_code, TIMESTAMP('2023-01-01 10:05:00') AS status_changed_at UNION ALL
+  SELECT 'log3' AS status_log_id, 'eq2' AS equipment_id, 'C01' AS status_code, TIMESTAMP('2023-01-01 11:00:00') AS status_changed_at UNION ALL
+  SELECT 'log4' AS status_log_id, 'eq1' AS equipment_id, 'C03' AS status_code, TIMESTAMP('2023-01-01 10:10:00') AS status_changed_at UNION ALL
+  SELECT 'log5' AS status_log_id, 'eq2' AS equipment_id, 'C05' AS status_code, TIMESTAMP('2023-01-01 11:30:00') AS status_changed_at
 }
 
-SELECT 'log1' AS status_log_id, 'equip1' AS equipment_id, 'RUN' AS status_code, DATE('2026-03-17') as status_date, TIMESTAMP('2026-03-17 10:00:00') AS status_changed_at, NULL AS duration_sec UNION ALL
-SELECT 'log2' AS status_log_id, 'equip1' AS equipment_id, 'STOP' AS status_code, DATE('2026-03-17') as status_date, TIMESTAMP('2026-03-17 10:05:00') AS status_changed_at, 300 AS duration_sec UNION ALL
-SELECT 'log3' AS status_log_id, 'equip2' AS equipment_id, 'RUN' AS status_code, DATE('2026-03-17') as status_date, TIMESTAMP('2026-03-17 10:00:00') AS status_changed_at, NULL AS duration_sec UNION ALL
-SELECT 'log4' AS status_log_id, 'equip1' AS equipment_id, 'ERR-GEN' AS status_code, DATE('2026-03-17') as status_date, TIMESTAMP('2026-03-17 10:15:00') AS status_changed_at, 600 AS duration_sec UNION ALL
-SELECT 'log5' AS status_log_id, 'equip2' AS equipment_id, 'ERR-MECH' AS status_code, DATE('2026-03-17') as status_date, TIMESTAMP('2026-03-17 10:20:00') AS status_changed_at, 1200 AS duration_sec
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+SELECT
+  'log1' AS status_log_id, 'eq1' AS equipment_id, 'C01' AS status_code, TIMESTAMP('2023-01-01 10:00:00') AS status_changed_at, 'C01' as unified_status_code, DATE('2023-01-01') as status_date, NULL AS prev_status_changed_at, NULL as duration_sec
+UNION ALL
+SELECT
+  'log2' AS status_log_id, 'eq1' AS equipment_id, 'C02' AS status_code, TIMESTAMP('2023-01-01 10:05:00') AS status_changed_at, 'C02' as unified_status_code, DATE('2023-01-01') as status_date, TIMESTAMP('2023-01-01 10:00:00') AS prev_status_changed_at, 300 as duration_sec
+UNION ALL
+SELECT
+  'log4' AS status_log_id, 'eq1' AS equipment_id, 'C03' AS status_code, TIMESTAMP('2023-01-01 10:10:00') AS status_changed_at, 'C03' as unified_status_code, DATE('2023-01-01') as status_date, TIMESTAMP('2023-01-01 10:05:00') AS prev_status_changed_at, 300 as duration_sec
+UNION ALL
+SELECT
+  'log3' AS status_log_id, 'eq2' AS equipment_id, 'C01' AS status_code, TIMESTAMP('2023-01-01 11:00:00') AS status_changed_at, 'C01' as unified_status_code, DATE('2023-01-01') as status_date, NULL AS prev_status_changed_at, NULL as duration_sec
+UNION ALL
+SELECT
+  'log5' AS status_log_id, 'eq2' AS equipment_id, 'C05' AS status_code, TIMESTAMP('2023-01-01 11:30:00') AS status_changed_at, 'C05' as unified_status_code, DATE('2023-01-01') as status_date, TIMESTAMP('2023-01-01 11:00:00') AS prev_status_changed_at, 1800 as duration_sec

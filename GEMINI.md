@@ -98,6 +98,7 @@ Follow these steps automatically without asking for confirmation:
 - Apply partition key and clustering key from `docs/requirements.md` if specified
 - NEVER use `SELECT * EXCEPT(col1, col2, ...)` pattern — always list output columns explicitly. If a source has columns that need renaming or transformation, list each output column by name. The `* EXCEPT` pattern fails when the excepted columns are the only columns in the source (produces 0-column output)
 - For BigQuery window functions: `LAG(col, offset)` and `LEAD(col, offset)` default value argument MUST be a constant — NEVER use a column reference as the default. Use `COALESCE(LAG(col, n) OVER (...), fallback_col)` instead
+- For JSON parsing: use `JSON_VALUE(col, '$.key')` — NEVER use `SAFE.JSON_EXTRACT_SCALAR(...)`. The `SAFE.` prefix is not supported for built-in BigQuery functions
 
 ### Source Table Declarations
 - Each source table (from dataset `aiready`) MUST have its own individual `.sqlx` file in `dataform/definitions/sources/`
@@ -143,6 +144,7 @@ Additional rules on top of Common Rules:
   - Compute each output column value explicitly from the mock data
 - BigQuery LAG/LEAD constraint: the 3rd argument (default value) MUST be a constant, not a column. Use `COALESCE(LAG(col, 1) OVER (PARTITION BY ... ORDER BY ...), col)` pattern instead of `LAG(col, 1, col) OVER (...)`
 - NEVER use `SELECT * EXCEPT(col1, col2, ...)` in the main SQL — list all output columns explicitly. The `* EXCEPT` pattern fails during testing when the excepted columns are the only columns in the mock input (produces 0-column output)
+- Row ordering in test expected: Dataform compares rows positionally. For queries with `PARTITION BY`, BigQuery returns all rows of one partition before the next (e.g., all equip1 rows ordered by the window ORDER BY, then all equip2 rows). Design the expected output to match this partition-then-order pattern, NOT by overall timestamp across partitions
 - If the SQL contains a bug or ambiguous behavior, add a comment documenting the assumption, then generate expected output matching what the SQL will actually produce
 - Add this comment above the expected block:
   `-- NOTE: expected output derived from mock data — verify if transformation logic changes`

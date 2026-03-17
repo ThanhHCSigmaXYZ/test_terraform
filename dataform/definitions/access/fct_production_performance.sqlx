@@ -2,7 +2,7 @@ config {
   type: "table",
   schema: "dev_dataform_dataset",
   name: "fct_production_performance",
-  description: "製造実績のファクトテーブル",
+  tags: ["access", "fact"],
   bigquery: {
     partitionBy: "production_date",
     clusterBy: ["material_id", "worker_id"]
@@ -10,19 +10,17 @@ config {
 }
 
 SELECT
-  p.order_id,
-  p.product_serial_no,
-  p.production_date,
-  p.start_time,
-  p.end_time,
-  d_mat.material_id,
-  d_w.worker_id,
-  TIMESTAMP_DIFF(p.end_time, p.start_time, SECOND) AS production_lead_time_sec
+  ord.order_id,
+  ord.product_serial_no,
+  ord.production_date,
+  mat.material_id,
+  wrk.worker_id,
+  TIMESTAMP_DIFF(ord.end_time, ord.start_time, SECOND) AS production_lead_time_sec
 FROM
-  ${ref("tmp_mes_prd_order_cleansed")} AS p
+  ${ref("tmp_mes_prd_order_cleansed")} AS ord
 LEFT JOIN
-  ${ref("dim_material")} AS d_mat
-  ON p.product_id = d_mat.material_id -- Assuming product_id maps to material_id
+  ${ref("dim_material")} AS mat
+  ON ord.material_id = mat.material_id
 LEFT JOIN
-  ${ref("dim_worker")} AS d_w
-  ON p.worker_id = d_w.worker_id
+  ${ref("dim_worker")} AS wrk
+  ON ord.worker_id = wrk.worker_id

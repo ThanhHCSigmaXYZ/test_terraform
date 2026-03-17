@@ -2,17 +2,15 @@ config {
   type: "table",
   schema: "dev_dataform_dataset",
   name: "dim_worker",
-  description: "作業者ディメンションテーブル",
-  bigquery: {
-    clusterBy: ["worker_id"]
-  }
+  tags: ["access", "dimension"]
 }
 
 SELECT
   worker_id,
-  worker_name_hashed,
-  department
+  -- In a real scenario, personal information like names would be hashed or anonymized
+  -- in the processed layer. This is a direct pass-through for demonstration.
+  worker_name
 FROM
   ${ref("tmp_erp_worker_master_scd2")}
 WHERE
-  is_current = TRUE
+  is_current

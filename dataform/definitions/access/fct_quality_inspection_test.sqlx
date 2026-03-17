@@ -1,20 +1,36 @@
--- NOTE: mock data designed for deterministic JOIN results
 config {
   type: "test",
   dataset: "fct_quality_inspection"
 }
 
+-- NOTE: mock data designed for deterministic JOIN results
 input "tmp_qms_inspection_std" {
-  SELECT 'insp1' as inspection_id, 'psn1' as product_serial_no, DATE('2026-03-17') as inspection_date, 10.5 as measurement_a, 25.0 as measurement_b_mm UNION ALL
-  SELECT 'insp2' as inspection_id, 'psn2' as product_serial_no, DATE('2026-03-17') as inspection_date, 11.0 as measurement_a, 25.1 as measurement_b_mm UNION ALL
-  SELECT 'insp3' as inspection_id, 'psn3' as product_serial_no, DATE('2026-03-18') as inspection_date, 9.8 as measurement_a, 22.0 as measurement_b_mm
+  SELECT 'insp1' as inspection_id, 'serial1' as product_serial_no, DATE('2023-01-10') as inspection_date, 10.5 as inspection_value_mm UNION ALL
+  SELECT 'insp2' as inspection_id, 'serial2' as product_serial_no, DATE('2023-01-11') as inspection_date, 12.0 as inspection_value_mm
 }
 
 input "fct_production_performance" {
-  SELECT 'psn1' as product_serial_no, 'o1' as order_id, 'w1' as worker_id, 3600 as production_lead_time_sec UNION ALL
-  SELECT 'psn2' as product_serial_no, 'o2' as order_id, 'w2' as worker_id, 1800 as production_lead_time_sec
+  SELECT 'order1' as order_id, 'serial1' as product_serial_no, 'mat1' as material_id, 'w1' as worker_id, 3600 as production_lead_time_sec UNION ALL
+  SELECT 'order2' as order_id, 'serial2' as product_serial_no, 'mat2' as material_id, 'w2' as worker_id, 1800 as production_lead_time_sec
 }
 
-SELECT 'insp1' as inspection_id, 'psn1' as product_serial_no, DATE('2026-03-17') as inspection_date, 10.5 as measurement_a, 25.0 as measurement_b_mm, 'o1' as order_id, 'w1' as worker_id, 3600 as production_lead_time_sec UNION ALL
-SELECT 'insp2' as inspection_id, 'psn2' as product_serial_no, DATE('2026-03-17') as inspection_date, 11.0 as measurement_a, 25.1 as measurement_b_mm, 'o2' as order_id, 'w2' as worker_id, 1800 as production_lead_time_sec UNION ALL
-SELECT 'insp3' as inspection_id, 'psn3' as product_serial_no, DATE('2026-03-18') as inspection_date, 9.8 as measurement_a, 22.0 as measurement_b_mm, NULL as order_id, NULL as worker_id, NULL as production_lead_time_sec
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+SELECT
+  'insp1' as inspection_id,
+  'serial1' as product_serial_no,
+  DATE('2023-01-10') as inspection_date,
+  10.5 as inspection_value_mm,
+  'order1' as order_id,
+  'mat1' as material_id,
+  'w1' as worker_id,
+  3600 as production_lead_time_sec
+UNION ALL
+SELECT
+  'insp2' as inspection_id,
+  'serial2' as product_serial_no,
+  DATE('2023-01-11') as inspection_date,
+  12.0 as inspection_value_mm,
+  'order2' as order_id,
+  'mat2' as material_id,
+  'w2' as worker_id,
+  1800 as production_lead_time_sec

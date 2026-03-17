@@ -2,7 +2,7 @@ config {
   type: "table",
   schema: "dev_dataform_dataset",
   name: "fct_equipment_downtime",
-  description: "設備停止分析用のファクトテーブル",
+  tags: ["access", "fact"],
   bigquery: {
     partitionBy: "status_date",
     clusterBy: ["equipment_id", "status_code"]
@@ -10,15 +10,15 @@ config {
 }
 
 SELECT
-  s.status_log_id,
-  s.equipment_id,
-  s.status_code,
-  s.status_date,
-  s.duration_sec,
-  p.order_id
+  stat.status_log_id,
+  stat.equipment_id,
+  stat.status_code,
+  stat.duration_sec,
+  stat.status_date,
+  perf.order_id
 FROM
-  ${ref("tmp_mes_eq_status_agg")} AS s
+  ${ref("tmp_mes_eq_status_agg")} AS stat
 LEFT JOIN
-  ${ref("fct_production_performance")} AS p
-  ON s.equipment_id = p.equipment_id -- NOTE: equipment_id needs to be added to fct_production_performance
-  AND s.status_changed_at BETWEEN p.start_time AND p.end_time
+  ${ref("fct_production_performance")} AS perf
+  ON stat.equipment_id = perf.equipment_id
+  AND stat.status_changed_at BETWEEN perf.start_time AND perf.end_time

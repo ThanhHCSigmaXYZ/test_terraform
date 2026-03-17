@@ -2,21 +2,29 @@ config {
   type: "table",
   schema: "dev_dataform_dataset",
   name: "tmp_qms_inspection_std",
-  description: "品質検査結果CSVの型変換と単位正規化",
+  tags: ["processed"],
   bigquery: {
     partitionBy: "inspection_date",
     clusterBy: ["product_serial_no"]
   }
 }
 
+-- This query assumes that the raw CSV columns are all strings
+-- and need to be cast to their appropriate types.
 SELECT
   inspection_id,
   product_serial_no,
-  SAFE_CAST(inspection_date_str AS DATE FORMAT 'YYYY-MM-DD') AS inspection_date,
-  SAFE_CAST(measurement_a AS FLOAT64) AS measurement_a,
+  SAFE_CAST(inspection_date_str AS DATE) AS inspection_date,
+  SAFE_CAST(inspection_value_str AS FLOAT64) AS inspection_value,
+  -- Unit Normalization Logic
   CASE
-    WHEN unit_b = 'cm' THEN SAFE_CAST(measurement_b AS FLOAT64) * 10
-    ELSE SAFE_CAST(measurement_b AS FLOAT64)
-  END AS measurement_b_mm
+    WHEN inspection_unit = 'cm' THEN SAFE_CAST(inspection_value_str AS FLOAT64) * 10
+    WHEN inspection_unit = 'm' THEN SAFE_CAST(inspection_value_str AS FLOAT64) * 1000
+    ELSE SAFE_CAST(inspection_value_str AS FLOAT64) -- Assume mm
+  END AS inspection_value_mm
 FROM
   ${ref("raw_qms_inspection")}
+WHERE
+  inspection_id IS NOT NULL
+  AND product_serial_no IS NOT NULL
+  AND SAFE_CAST(inspection_date_str AS DATE) IS NOT NULL

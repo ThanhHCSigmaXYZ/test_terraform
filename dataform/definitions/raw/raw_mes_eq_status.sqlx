@@ -2,7 +2,7 @@ config {
   type: "table",
   schema: "dev_dataform_dataset",
   name: "raw_mes_eq_status",
-  description: "MESからの設備稼働ステータスデータの取り込み（日次差分）",
+  tags: ["raw"],
   bigquery: {
     partitionBy: "etl_loaded_date",
     clusterBy: ["equipment_id"]

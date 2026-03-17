@@ -4,15 +4,24 @@ config {
 }
 
 input "qms_inspection_result" {
-  SELECT 'insp1' AS inspection_id, 'serial1' AS product_serial_no, 'pass' AS result, '10.5' AS measurement UNION ALL
-  SELECT 'insp2' AS inspection_id, 'serial2' AS product_serial_no, 'fail' AS result, '12.1' AS measurement UNION ALL
-  SELECT 'insp3' AS inspection_id, 'serial3' AS product_serial_no, 'pass' AS result, '10.2' AS measurement UNION ALL
-  SELECT 'insp4' AS inspection_id, 'serial4' AS product_serial_no, 'pass' AS result, '10.4' AS measurement UNION ALL
-  SELECT 'insp5' AS inspection_id, 'serial5' AS product_serial_no, 'fail' AS result, '15.0' AS measurement
+  SELECT 'insp1' AS inspection_id, 'serial1' AS product_serial_no, 'pass' AS result UNION ALL
+  SELECT 'insp2' AS inspection_id, 'serial2' AS product_serial_no, 'fail' AS result UNION ALL
+  SELECT 'insp3' AS inspection_id, 'serial3' AS product_serial_no, 'pass' AS result UNION ALL
+  SELECT 'insp4' AS inspection_id, 'serial4' AS product_serial_no, 'pass' AS result UNION ALL
+  SELECT 'insp5' AS inspection_id, 'serial5' AS product_serial_no, 'fail' AS result
 }
 
-SELECT 'insp1' AS inspection_id, 'serial1' AS product_serial_no, 'pass' AS result, '10.5' AS measurement, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date, 'unknown' AS source_file_name UNION ALL
-SELECT 'insp2' AS inspection_id, 'serial2' AS product_serial_no, 'fail' AS result, '12.1' AS measurement, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date, 'unknown' AS source_file_name UNION ALL
-SELECT 'insp3' AS inspection_id, 'serial3' AS product_serial_no, 'pass' AS result, '10.2' AS measurement, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date, 'unknown' AS source_file_name UNION ALL
-SELECT 'insp4' AS inspection_id, 'serial4' AS product_serial_no, 'pass' AS result, '10.4' AS measurement, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date, 'unknown' AS source_file_name UNION ALL
-SELECT 'insp5' AS inspection_id, 'serial5' AS product_serial_no, 'fail' AS result, '15.0' AS measurement, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date, 'unknown' AS source_file_name
+SELECT
+  'insp1' AS inspection_id, 'serial1' AS product_serial_no, 'pass' AS result, NULL as source_file_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+UNION ALL
+SELECT
+  'insp2' AS inspection_id, 'serial2' AS product_serial_no, 'fail' AS result, NULL as source_file_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+UNION ALL
+SELECT
+  'insp3' AS inspection_id, 'serial3' AS product_serial_no, 'pass' AS result, NULL as source_file_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+UNION ALL
+SELECT
+  'insp4' AS inspection_id, 'serial4' AS product_serial_no, 'pass' AS result, NULL as source_file_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+UNION ALL
+SELECT
+  'insp5' AS inspection_id, 'serial5' AS product_serial_no, 'fail' AS result, NULL as source_file_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
