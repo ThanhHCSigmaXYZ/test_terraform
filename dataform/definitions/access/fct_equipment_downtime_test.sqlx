@@ -16,9 +16,7 @@ input "fct_production_performance" {
   SELECT 'order1' as order_id, 'psn1' as product_serial_no, 'equip1' as equipment_id, CAST('2026-03-17 10:00:00' AS TIMESTAMP) as start_time, CAST('2026-03-17 11:00:00' AS TIMESTAMP) as end_time
 }
 
-expected {
   -- log1 should be joined with order1
   SELECT 'log1' as status_log_id, 'equip1' as equipment_id, 'DOWN' as status_code, CAST('2026-03-17 10:15:00' AS TIMESTAMP) as status_changed_at, DATE '2026-03-17' as status_date, 300 as duration_sec, 'order1' as order_id, 'psn1' as product_serial_no UNION ALL
   -- log2 should not join
   SELECT 'log2' as status_log_id, 'equip1' as equipment_id, 'IDLE' as status_code, CAST('2026-03-17 12:00:00' AS TIMESTAMP) as status_changed_at, DATE '2026-03-17' as status_date, 1800 as duration_sec, CAST(NULL AS STRING) as order_id, CAST(NULL AS STRING) as product_serial_no
-}

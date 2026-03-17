@@ -12,10 +12,8 @@ input "mes_production_order" {
   SELECT 'order5' as order_id, 'psn5' as product_serial_no
 }
 
-expected {
   SELECT 'order1' as order_id, 'psn1' as product_serial_no UNION ALL
   SELECT 'order2' as order_id, 'psn2' as product_serial_no UNION ALL
   SELECT 'order3' as order_id, 'psn3' as product_serial_no UNION ALL
   SELECT 'order4' as order_id, 'psn4' as product_serial_no UNION ALL
   SELECT 'order5' as order_id, 'psn5' as product_serial_no
-}

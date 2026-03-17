@@ -12,10 +12,8 @@ input "erp_material_master" {
   SELECT 'mat5' as material_id, 'Material 5' as material_name
 }
 
-expected {
   SELECT 'mat1' as material_id, 'Material 1' as material_name UNION ALL
   SELECT 'mat2' as material_id, 'Material 2' as material_name UNION ALL
   SELECT 'mat3' as material_id, 'Material 3' as material_name UNION ALL
   SELECT 'mat4' as material_id, 'Material 4' as material_name UNION ALL
   SELECT 'mat5' as material_id, 'Material 5' as material_name
-}

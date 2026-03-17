@@ -12,7 +12,5 @@ input "tmp_erp_worker_master_scd2" {
   SELECT 'w2' as worker_id, 'Tanaka' as worker_name, CAST('2026-01-20 10:00:00' AS TIMESTAMP) as valid_from, CAST('9999-12-31 23:59:59' AS TIMESTAMP) as valid_to, true as is_current
 }
 
-expected {
   SELECT 'w1' as worker_id, 'Sato Ken' as worker_name, CAST('2026-02-20 10:00:00' AS TIMESTAMP) as valid_from, CAST('9999-12-31 23:59:59' AS TIMESTAMP) as valid_to, true as is_current UNION ALL
   SELECT 'w2' as worker_id, 'Tanaka' as worker_name, CAST('2026-01-20 10:00:00' AS TIMESTAMP) as valid_from, CAST('9999-12-31 23:59:59' AS TIMESTAMP) as valid_to, true as is_current
-}

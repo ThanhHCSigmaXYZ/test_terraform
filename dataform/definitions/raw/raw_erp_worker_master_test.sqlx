@@ -12,10 +12,8 @@ input "erp_worker_master" {
   SELECT 'w5' as worker_id, 'Worker 5' as worker_name
 }
 
-expected {
   SELECT 'w1' as worker_id, 'Worker 1' as worker_name UNION ALL
   SELECT 'w2' as worker_id, 'Worker 2' as worker_name UNION ALL
   SELECT 'w3' as worker_id, 'Worker 3' as worker_name UNION ALL
   SELECT 'w4' as worker_id, 'Worker 4' as worker_name UNION ALL
   SELECT 'w5' as worker_id, 'Worker 5' as worker_name
-}

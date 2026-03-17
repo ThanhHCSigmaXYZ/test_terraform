@@ -12,10 +12,8 @@ input "raw_qms_inspection" {
 }
 
 -- NOTE: expected output derived from mock data — verify if transformation logic changes
-expected {
   SELECT 'insp1' as inspection_id, 'psn1' as product_serial_no, DATE '2026-03-17' AS inspection_date, 50.0 as inspection_value, 5.0 as inspection_value_cm UNION ALL
   SELECT 'insp2' as inspection_id, 'psn1' as product_serial_no, DATE '2026-03-17' AS inspection_date, 6.0 as inspection_value, 6.0 as inspection_value_cm UNION ALL
   SELECT 'insp3' as inspection_id, 'psn2' as product_serial_no, DATE '2026-03-18' AS inspection_date, 55.0 as inspection_value, 5.5 as inspection_value_cm UNION ALL
   SELECT 'insp4' as inspection_id, 'psn3' as product_serial_no, DATE '2026-03-18' AS inspection_date, 7.2 as inspection_value, 7.2 as inspection_value_cm UNION ALL
   SELECT 'insp5' as inspection_id, 'psn3' as product_serial_no, DATE '2026-03-18' AS inspection_date, 75.0 as inspection_value, 7.5 as inspection_value_cm
-}
