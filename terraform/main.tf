@@ -1,6 +1,11 @@
 terraform {
   required_version = ">= 1.0"
-  
+
+  backend "gcs" {
+    bucket = "ats-theme-dmo-b2bdatacolab-tf-state"
+    # prefix is passed dynamically via -backend-config in CI per environment
+  }
+
   required_providers {
     google-beta = {
       source  = "hashicorp/google-beta"
