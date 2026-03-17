@@ -28,10 +28,13 @@ WITH
     SELECT
       *,
       -- Step2(順序付): LAG関数を用い、同一設備(equipment_id)の「1つ前のステータス変化時刻」を取得
-      LAG(status_changed_at, 1, status_changed_at) OVER (
-        PARTITION BY equipment_id
-        ORDER BY
-          status_changed_at
+      -- Note: BigQuery requires LAG default to be a constant; use COALESCE to handle first-row NULL
+      COALESCE(
+        LAG(status_changed_at, 1) OVER (
+          PARTITION BY equipment_id
+          ORDER BY status_changed_at
+        ),
+        status_changed_at
       ) AS prev_status_changed_at
     FROM
       error_code_normalized

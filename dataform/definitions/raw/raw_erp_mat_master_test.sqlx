@@ -1,4 +1,3 @@
--- NOTE: etl_loaded_at excluded from expected output (non-deterministic)
 config {
   type: "test",
   dataset: "raw_erp_mat_master"
@@ -12,8 +11,8 @@ input "erp_material_master" {
   SELECT 'mat5' as material_id, 'Material 5' as material_name
 }
 
-  SELECT 'mat1' as material_id, 'Material 1' as material_name UNION ALL
-  SELECT 'mat2' as material_id, 'Material 2' as material_name UNION ALL
-  SELECT 'mat3' as material_id, 'Material 3' as material_name UNION ALL
-  SELECT 'mat4' as material_id, 'Material 4' as material_name UNION ALL
-  SELECT 'mat5' as material_id, 'Material 5' as material_name
+  SELECT 'mat1' as material_id, 'Material 1' as material_name, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'mat2' as material_id, 'Material 2' as material_name, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'mat3' as material_id, 'Material 3' as material_name, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'mat4' as material_id, 'Material 4' as material_name, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'mat5' as material_id, 'Material 5' as material_name, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date

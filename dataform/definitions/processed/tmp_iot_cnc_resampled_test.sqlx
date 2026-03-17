@@ -14,9 +14,9 @@ input "raw_iot_cnc_telemetry" {
   SELECT 'machine2' as machine_id, CAST('2026-03-17 10:00:00.8' AS TIMESTAMP) as timestamp, '{"temp": 9999.0, "vibration": 5.0}' as payload -- Outlier
 }
 
--- NOTE: expected output derived from mock data — verify if transformation logic changes
-  -- machine1, second 0: avg(50.0, 51.0) = 50.5, avg(0.2, 0.22) = 0.21
-  SELECT 'machine1' as machine_id, CAST('2026-03-17 10:00:00' AS TIMESTAMP) AS telemetry_timestamp, DATE '2026-03-17' as telemetry_date, 50.5 as avg_temperature, 0.21 as avg_vibration UNION ALL
+-- NOTE: avg_vibration uses expression (0.2 + 0.22) / 2 to match BigQuery IEEE 754 float64 result
+  -- machine1, second 0: avg(50.0, 51.0) = 50.5, avg(0.2, 0.22) = (0.2 + 0.22) / 2
+  SELECT 'machine1' as machine_id, CAST('2026-03-17 10:00:00' AS TIMESTAMP) AS telemetry_timestamp, DATE '2026-03-17' as telemetry_date, 50.5 as avg_temperature, (0.2 + 0.22) / 2 as avg_vibration UNION ALL
   -- machine1, second 1
   SELECT 'machine1' as machine_id, CAST('2026-03-17 10:00:01' AS TIMESTAMP) AS telemetry_timestamp, DATE '2026-03-17' as telemetry_date, 52.0 as avg_temperature, 0.25 as avg_vibration UNION ALL
   -- machine2, second 0 (outlier is excluded)

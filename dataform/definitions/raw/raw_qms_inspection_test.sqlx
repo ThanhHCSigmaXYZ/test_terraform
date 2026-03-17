@@ -1,4 +1,3 @@
--- NOTE: etl_loaded_at excluded from expected output (non-deterministic)
 config {
   type: "test",
   dataset: "raw_qms_inspection"
@@ -12,8 +11,8 @@ input "qms_inspection_result" {
   SELECT 'insp5' as inspection_id, 'psn5' as product_serial_no, 'file3.csv' as source_file_name
 }
 
-  SELECT 'insp1' as inspection_id, 'psn1' as product_serial_no, 'file1.csv' as source_file_name UNION ALL
-  SELECT 'insp2' as inspection_id, 'psn2' as product_serial_no, 'file1.csv' as source_file_name UNION ALL
-  SELECT 'insp3' as inspection_id, 'psn3' as product_serial_no, 'file2.csv' as source_file_name UNION ALL
-  SELECT 'insp4' as inspection_id, 'psn4' as product_serial_no, 'file2.csv' as source_file_name UNION ALL
-  SELECT 'insp5' as inspection_id, 'psn5' as product_serial_no, 'file3.csv' as source_file_name
+  SELECT 'insp1' as inspection_id, 'psn1' as product_serial_no, 'file1.csv' as source_file_name, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'insp2' as inspection_id, 'psn2' as product_serial_no, 'file1.csv' as source_file_name, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'insp3' as inspection_id, 'psn3' as product_serial_no, 'file2.csv' as source_file_name, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'insp4' as inspection_id, 'psn4' as product_serial_no, 'file2.csv' as source_file_name, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'insp5' as inspection_id, 'psn5' as product_serial_no, 'file3.csv' as source_file_name, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date

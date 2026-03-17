@@ -21,7 +21,6 @@ SELECT
     WHEN inspection_unit = 'mm' THEN CAST(inspection_value_str AS FLOAT64) / 10
     WHEN inspection_unit = 'cm' THEN CAST(inspection_value_str AS FLOAT64)
     ELSE NULL
-  END AS inspection_value_cm,
-  * EXCEPT(inspection_id, product_serial_no, inspection_date_str, inspection_value_str, inspection_unit)
+  END AS inspection_value_cm
 FROM
   ${ref("raw_qms_inspection")}

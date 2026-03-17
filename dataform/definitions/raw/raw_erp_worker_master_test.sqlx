@@ -1,4 +1,3 @@
--- NOTE: etl_loaded_at excluded from expected output (non-deterministic)
 config {
   type: "test",
   dataset: "raw_erp_worker_master"
@@ -12,8 +11,8 @@ input "erp_worker_master" {
   SELECT 'w5' as worker_id, 'Worker 5' as worker_name
 }
 
-  SELECT 'w1' as worker_id, 'Worker 1' as worker_name UNION ALL
-  SELECT 'w2' as worker_id, 'Worker 2' as worker_name UNION ALL
-  SELECT 'w3' as worker_id, 'Worker 3' as worker_name UNION ALL
-  SELECT 'w4' as worker_id, 'Worker 4' as worker_name UNION ALL
-  SELECT 'w5' as worker_id, 'Worker 5' as worker_name
+  SELECT 'w1' as worker_id, 'Worker 1' as worker_name, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'w2' as worker_id, 'Worker 2' as worker_name, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'w3' as worker_id, 'Worker 3' as worker_name, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'w4' as worker_id, 'Worker 4' as worker_name, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'w5' as worker_id, 'Worker 5' as worker_name, CURRENT_TIMESTAMP() AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
