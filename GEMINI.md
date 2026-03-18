@@ -184,3 +184,4 @@ Additional rules on top of Common Rules:
 - NEVER include explanation or preamble in generated files
 - If the requested table name is not found in `docs/requirements.md`, stop and tell the developer
 - If transformation logic is ambiguous, list assumptions at the top of the generated file as comments
+- Always generate ALL requested tables regardless of complexity — never skip or defer a table. If the logic is complex, implement a basic/simplified version rather than leaving the file empty or as a skeleton
