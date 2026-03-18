@@ -1,27 +1,22 @@
 config {
-  type: "table",
-  schema: "dev_dataform_dataset",
-  name: "fct_production_performance",
-  tags: ["access"],
-  description: "製造実績のファクトテーブル作成",
-  dataformCore: "3.0.7",
-  partitionBy: "production_date",
-  clusterBy: ["material_id", "worker_id"]
+    type: "table",
+    schema: "dev_dataform_dataset",
+    name: "fct_production_performance",
+    partition_by: "production_date",
+    cluster_by: ["material_id", "worker_id"]
 }
 
 SELECT
-  f.order_id,
-  f.product_serial_no,
-  f.production_date,
-  f.start_time, -- Added this column
-  f.end_time, -- Added this column
-  f.equipment_id, -- Added this column
-  d_mat.material_id,
-  d_w.worker_id,
-  TIMESTAMP_DIFF(f.end_time, f.start_time, SECOND) as production_lead_time_sec
+    fact.*,
+    dim_mat.material_name,
+    dim_w.worker_name,
+    TIMESTAMP_DIFF(fact.end_time, fact.start_time, SECOND) as manufacturing_lead_time_sec
 FROM
-  ${ref("tmp_mes_prd_order_cleansed")} f
+    ${ref("tmp_mes_prd_order_cleansed")} AS fact
 LEFT JOIN
-  ${ref("dim_material")} d_mat ON f.material_id = d_mat.material_id AND f.start_time BETWEEN d_mat.valid_from AND d_mat.valid_to
+    ${ref("dim_material")} AS dim_mat ON fact.material_id = dim_mat.material_id
+    -- Join on the dimension that was valid at the time of production
+    AND fact.production_date >= dim_mat.valid_from AND fact.production_date < dim_mat.valid_to
 LEFT JOIN
-  ${ref("dim_worker")} d_w ON f.worker_id = d_w.worker_id AND f.start_time BETWEEN d_w.valid_from AND d_w.valid_to
+    ${ref("dim_worker")} AS dim_w ON fact.worker_id = dim_w.worker_id
+    AND fact.production_date >= dim_w.valid_from AND fact.production_date < dim_w.valid_to

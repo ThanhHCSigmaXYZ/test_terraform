@@ -1,25 +1,19 @@
 config {
-  type: "table",
-  schema: "dev_dataform_dataset",
-  name: "fct_equipment_downtime",
-  tags: ["access"],
-  description: "設備停止分析用のファクトテーブル作成",
-  dataformCore: "3.0.7",
-  partitionBy: "status_date",
-  clusterBy: ["equipment_id", "status_code"]
+    type: "table",
+    schema: "dev_dataform_dataset",
+    name: "fct_equipment_downtime",
+    partition_by: "status_date",
+    cluster_by: ["equipment_id", "status_code"]
 }
 
 SELECT
-  agg.status_log_id,
-  agg.equipment_id,
-  agg.status_code,
-  agg.duration_sec,
-  agg.status_date,
-  perf.order_id
+    status.*,
+    prod.order_id,
+    prod.product_serial_no
 FROM
-  ${ref("tmp_mes_eq_status_agg")} agg
+    ${ref("tmp_mes_eq_status_agg")} AS status
 LEFT JOIN
-  ${ref("fct_production_performance")} perf
-ON
-  agg.equipment_id = perf.equipment_id AND
-  agg.status_changed_at BETWEEN perf.start_time AND perf.end_time
+    ${ref("fct_production_performance")} AS prod
+    ON status.equipment_id = prod.equipment_id
+    -- 状態発生時刻が製造実績の「開始時刻〜終了時刻の間に収まる（BETWEEN）」条件で LEFT JOIN
+    AND status.status_changed_at BETWEEN prod.start_time AND prod.end_time

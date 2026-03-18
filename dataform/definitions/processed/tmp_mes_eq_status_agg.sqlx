@@ -1,44 +1,33 @@
 config {
-  type: "table",
-  schema: "dev_dataform_dataset",
-  name: "tmp_mes_eq_status_agg",
-  tags: ["processed"],
-  description: "設備状態ログからの稼働・停止時間算出",
-  dataformCore: "3.0.7",
-  partitionBy: "status_date",
-  clusterBy: ["equipment_id"]
+    type: "table",
+    schema: "dev_dataform_dataset",
+    name: "tmp_mes_eq_status_agg",
+    partition_by: "status_date",
+    cluster_by: ["equipment_id"]
 }
 
-WITH normalized_status AS (
-  -- Step1: Normalize error codes, etc.
-  -- This is a placeholder for actual normalization logic.
-  SELECT
-    status_log_id,
-    equipment_id,
-    status_code,
-    SAFE_CAST(status_changed_at AS TIMESTAMP) as status_changed_at,
-    DATE(SAFE_CAST(status_changed_at AS TIMESTAMP)) as status_date
-  FROM
-    ${ref("raw_mes_eq_status")}
+WITH
+Step1_normalized AS (
+    SELECT
+        *,
+        -- Step1(正規化): エラーコードの工場間の体系差異を変換し統一
+        CASE
+            WHEN status_code = 'E-101' AND factory_code = 'F1' THEN 'UNIFIED_ERROR_1'
+            WHEN status_code = 'ERR_101' AND factory_code = 'F2' THEN 'UNIFIED_ERROR_1'
+            ELSE status_code
+        END AS unified_status_code
+    FROM ${ref("raw_mes_eq_status")}
 ),
-lagged_status AS (
-  -- Step2: Get previous status change time
-  SELECT
-    *,
-    COALESCE(
-      LAG(status_changed_at, 1) OVER (PARTITION BY equipment_id ORDER BY status_changed_at),
-      status_changed_at
-    ) as prev_status_changed_at
-  FROM
-    normalized_status
+Step2_get_prev_time AS (
+    SELECT
+        *,
+        -- Step2(順序付): LAG関数を用い、同一設備(equipment_id)の「1つ前のステータス変化時刻」を取得
+        LAG(status_changed_at, 1) OVER (PARTITION BY equipment_id ORDER BY status_changed_at) as prev_status_changed_at
+    FROM Step1_normalized
 )
--- Step3: Calculate duration
+-- Step3(算出): 現在の時刻とStep2の時刻の差分から「継続時間(秒)」を算出しカラムを追加
 SELECT
-  status_log_id,
-  equipment_id,
-  status_code,
-  status_changed_at,
-  status_date,
-  TIMESTAMP_DIFF(status_changed_at, prev_status_changed_at, SECOND) AS duration_sec
-FROM
-  lagged_status
+    *,
+    DATE(status_changed_at) as status_date,
+    TIMESTAMP_DIFF(status_changed_at, prev_status_changed_at, SECOND) as duration_sec
+FROM Step2_get_prev_time

@@ -1,23 +1,20 @@
 config {
-  type: "table",
-  schema: "dev_dataform_dataset",
-  name: "tmp_qms_inspection_std",
-  tags: ["processed"],
-  description: "品質検査結果CSVの型変換と単位正規化",
-  dataformCore: "3.0.7",
-  partitionBy: "inspection_date",
-  clusterBy: ["product_serial_no"]
+    type: "table",
+    schema: "dev_dataform_dataset",
+    name: "tmp_qms_inspection_std",
+    partition_by: "inspection_date",
+    cluster_by: ["product_serial_no"]
 }
 
--- Assuming all columns are strings in raw table
 SELECT
-  inspection_id,
-  product_serial_no,
-  SAFE_CAST(inspection_date_str AS DATE) as inspection_date,
-  -- Example of unit conversion (cm to mm)
-  SAFE_CAST(measurement_cm AS FLOAT64) * 10 as measurement_mm,
-  result
+    inspection_id,
+    product_serial_no,
+    CAST(inspection_date_str AS DATE) as inspection_date,
+    -- ・単位が異なる検査項目（mmとcmなど）を標準単位に換算して統一
+    CASE
+        WHEN unit_str = 'cm' THEN CAST(inspection_value_str AS FLOAT64) * 10
+        WHEN unit_str = 'mm' THEN CAST(inspection_value_str AS FLOAT64)
+        ELSE CAST(inspection_value_str AS FLOAT64)
+    END as inspection_value_mm
 FROM
-  ${ref("raw_qms_inspection")}
--- This is a simplified transformation. A real-world scenario would
--- have more complex logic for casting and unit conversion based on item type.
+    ${ref("raw_qms_inspection")}

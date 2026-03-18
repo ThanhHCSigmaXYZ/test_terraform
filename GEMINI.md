@@ -93,6 +93,14 @@ Follow these steps automatically without asking for confirmation:
 - type must be: "table" for main file, "test" for test file
 - schema must always be: dev_dataform_dataset
 - Always use `${ref("table_name")}` to reference source tables
+- for "table" - main file's config, please follow these below format strictly
+ ```
+  config {
+    type: "table",
+    schema: "ev_dataform_dataset",
+    name: "table_name"
+  }
+  ```
 - Always use single quotes for strings in BigQuery SQL → 'value' not "value"
 - Never use CURRENT_TIMESTAMP() in any column — use `TIMESTAMP(CURRENT_DATE())` instead for ETL metadata columns
 - Apply partition key and clustering key from `docs/requirements.md` if specified
@@ -100,10 +108,11 @@ Follow these steps automatically without asking for confirmation:
 - For BigQuery window functions: `LAG(col, offset)` and `LEAD(col, offset)` default value argument MUST be a constant — NEVER use a column reference as the default. Use `COALESCE(LAG(col, n) OVER (...), fallback_col)` instead
 - For JSON parsing: use `JSON_VALUE(col, '$.key')` — NEVER use `SAFE.JSON_EXTRACT_SCALAR(...)`. The `SAFE.` prefix is not supported for built-in BigQuery functions
 
+
 ### Source Table Declarations
 - Each source table (from dataset `aiready`) MUST have its own individual `.sqlx` file in `dataform/definitions/sources/`
 - NEVER put multiple `config {}` blocks in one file — Dataform does not support this
-- Format for each declaration file:
+- Format for each declaration file: 
   ```
   config {
     type: "declaration",

@@ -1,20 +1,19 @@
 config {
-  type: "table",
-  schema: "dev_dataform_dataset",
-  name: "fct_machine_sensor",
-  tags: ["access"],
-  description: "センサー推移分析用のファクトテーブル作成",
-  dataformCore: "3.0.7",
-  partitionBy: "telemetry_date",
-  clusterBy: ["product_serial_no", "machine_id"]
+    type: "table",
+    schema: "dev_dataform_dataset",
+    name: "fct_machine_sensor",
+    partition_by: "telemetry_date",
+    cluster_by: ["product_serial_no", "machine_id"]
 }
 
 SELECT
-  s.machine_id,
-  s.telemetry_timestamp,
-  s.telemetry_date,
-  p.product_serial_no
+    sensor.*,
+    prod.product_serial_no
 FROM
-  ${ref("tmp_iot_cnc_resampled")} s
+    ${ref("tmp_iot_cnc_resampled")} AS sensor
 LEFT JOIN
-  ${ref("fct_production_performance")} p ON s.machine_id = p.equipment_id AND s.telemetry_timestamp BETWEEN p.start_time AND p.end_time
+    ${ref("fct_production_performance")} AS prod
+    -- Assuming machine_id in sensor table maps to equipment_id in production table
+    ON sensor.machine_id = prod.equipment_id
+    -- Join if the sensor log timestamp falls within the production order's time range
+    AND sensor.telemetry_timestamp BETWEEN prod.start_time AND prod.end_time

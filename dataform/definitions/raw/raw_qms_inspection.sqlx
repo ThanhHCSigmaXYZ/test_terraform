@@ -1,18 +1,14 @@
 config {
-  type: "table",
-  schema: "dev_dataform_dataset",
-  name: "raw_qms_inspection",
-  tags: ["raw"],
-  description: "QMSからの品質検査結果CSVの取り込み（日次）",
-  dataformCore: "3.0.7",
-  partitionBy: "etl_loaded_date",
-  clusterBy: ["inspection_id"]
+    type: "table",
+    schema: "dev_dataform_dataset",
+    name: "raw_qms_inspection",
+    partition_by: "etl_loaded_date",
+    cluster_by: ["inspection_id"]
 }
 
 SELECT
-  *,
-  TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
-  CURRENT_DATE() AS etl_loaded_date,
-  "dummy_filename.csv" AS source_file_name
+    *,
+    TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
+    CURRENT_DATE() AS etl_loaded_date
 FROM
-  ${ref("qms_inspection_result")}
+    ${ref("qms_inspection_result")}

@@ -1,23 +1,29 @@
 config {
-  type: "table",
-  schema: "dev_dataform_dataset",
-  name: "tmp_erp_worker_master_scd2",
-  tags: ["processed"],
-  description: "作業者マスタのSCD Type2処理（履歴化）",
-  dataformCore: "3.0.7",
-  clusterBy: ["worker_id"]
+    type: "table",
+    schema: "dev_dataform_dataset",
+    name: "tmp_erp_worker_master_scd2",
+    bigquery: {
+        clusterBy: ["worker_id"]
+    }
 }
 
--- This is a placeholder for a real SCD Type 2 implementation.
--- A full implementation would typically involve comparing against the
--- existing dimension table to detect changes and create new versions.
--- This simplified example just adds history columns.
--- Also, hashing/anonymization should be applied here.
-SELECT
-  worker_id,
-  SHA256(worker_name) as worker_name_hash, -- Anonymization
-  etl_loaded_at AS valid_from,
-  LEAD(etl_loaded_at, 1, TIMESTAMP('9999-12-31 23:59:59')) OVER (PARTITION BY worker_id ORDER BY etl_loaded_at) AS valid_to,
-  (LEAD(etl_loaded_at, 1) OVER (PARTITION BY worker_id ORDER BY etl_loaded_at) IS NULL) AS is_current
-FROM
-  ${ref("raw_erp_worker_master")}
+WITH changes AS (
+    SELECT
+        worker_id,
+        worker_name,
+        etl_loaded_date,
+        FARM_FINGERPRINT(TO_JSON_STRING(STRUCT(worker_name))) AS row_hash,
+        LAG(FARM_FINGERPRINT(TO_JSON_STRING(STRUCT(worker_name))), 1) OVER (PARTITION BY worker_id ORDER BY etl_loaded_date) AS prev_row_hash
+    FROM ${ref("raw_erp_worker_master")}
+),
+scd2_logic AS (
+    SELECT
+        worker_id,
+        worker_name,
+        etl_loaded_date AS valid_from,
+        LEAD(etl_loaded_date, 1, DATE('9999-12-31')) OVER (PARTITION BY worker_id ORDER BY etl_loaded_date) AS valid_to,
+        (ROW_NUMBER() OVER (PARTITION BY worker_id ORDER BY etl_loaded_date DESC) = 1) AS is_current
+    FROM changes
+    WHERE prev_row_hash IS NULL OR row_hash != prev_row_hash
+)
+SELECT * FROM scd2_logic

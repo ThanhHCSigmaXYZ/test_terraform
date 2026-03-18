@@ -1,5 +1,5 @@
 config {
-  type: "declaration",
-  schema: "aiready",
-  name: "erp_material_master"
+    type: "declaration",
+    schema: "aiready",
+    name: "erp_material_master"
 }

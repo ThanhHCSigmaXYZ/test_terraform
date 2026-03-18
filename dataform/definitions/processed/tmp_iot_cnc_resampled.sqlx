@@ -1,47 +1,36 @@
 config {
-  type: "table",
-  schema: "dev_dataform_dataset",
-  name: "tmp_iot_cnc_resampled",
-  tags: ["processed"],
-  description: "IoTデータ（JSON）の展開とダウンサンプリング",
-  dataformCore: "3.0.7",
-  partitionBy: "telemetry_date",
-  clusterBy: ["machine_id"]
+    type: "table",
+    schema: "dev_dataform_dataset",
+    name: "tmp_iot_cnc_resampled",
+    partition_by: "telemetry_date",
+    cluster_by: ["machine_id"]
 }
 
-WITH unfolded_json AS (
-  SELECT
-    machine_id,
-    SAFE_CAST(timestamp AS TIMESTAMP) AS telemetry_timestamp,
-    JSON_VALUE(payload, '$.temperature') AS temperature_str,
-    JSON_VALUE(payload, '$.vibration') AS vibration_str
-  FROM
-    ${ref("raw_iot_cnc_telemetry")}
+WITH
+Step1_parsed AS (
+    -- ① JSON内の温度・振動データをカラムに展開
+    SELECT
+        machine_id,
+        timestamp,
+        CAST(JSON_VALUE(payload, '$.temp') AS FLOAT64) as temperature,
+        CAST(JSON_VALUE(payload, '$.vib') AS FLOAT64) as vibration
+    FROM
+        ${ref("raw_iot_cnc_telemetry")}
 ),
--- Placeholder for outlier removal logic
-filtered_data AS (
-  SELECT
-    machine_id,
-    telemetry_timestamp,
-    SAFE_CAST(temperature_str AS FLOAT64) as temperature,
-    SAFE_CAST(vibration_str AS FLOAT64) as vibration
-  FROM unfolded_json
-  WHERE SAFE_CAST(temperature_str AS FLOAT64) < 1000 -- Example outlier removal
-),
--- Downsampling to 1-second average
-resampled_data AS (
-  SELECT
-    machine_id,
-    TIMESTAMP_TRUNC(telemetry_timestamp, SECOND) as telemetry_second,
-    AVG(temperature) as avg_temperature,
-    AVG(vibration) as avg_vibration
-  FROM filtered_data
-  GROUP BY 1, 2
+Step2_filtered AS (
+    -- ② 極端な外れ値（センサー異常）の除外
+    SELECT *
+    FROM Step1_parsed
+    WHERE
+        temperature BETWEEN 0 AND 1000 -- Assuming a valid temperature range
+        AND vibration BETWEEN 0 AND 1 -- Assuming a valid vibration range
 )
+-- ③ 残ったデータを1秒単位の平均値に丸め（ダウンサンプリング）
 SELECT
-  machine_id,
-  telemetry_second as telemetry_timestamp,
-  avg_temperature as temperature,
-  avg_vibration as vibration,
-  DATE(telemetry_second) as telemetry_date
-FROM resampled_data
+    machine_id,
+    TIMESTAMP_TRUNC(timestamp, SECOND) as telemetry_timestamp,
+    DATE(TIMESTAMP_TRUNC(timestamp, SECOND)) as telemetry_date,
+    AVG(temperature) as temperature,
+    AVG(vibration) as vibration
+FROM Step2_filtered
+GROUP BY 1, 2, 3

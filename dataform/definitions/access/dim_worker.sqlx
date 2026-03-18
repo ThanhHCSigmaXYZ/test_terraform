@@ -1,18 +1,8 @@
 config {
-  type: "table",
-  schema: "dev_dataform_dataset",
-  name: "dim_worker",
-  tags: ["access"],
-  description: "Worker dimension table with anonymized data.",
-  dataformCore: "3.0.7",
-  clusterBy: ["worker_id"]
+    type: "table",
+    schema: "dev_dataform_dataset",
+    name: "dim_worker",
+    cluster_by: ["worker_id"]
 }
 
-SELECT
-  worker_id,
-  worker_name_hash,
-  valid_from,
-  valid_to,
-  is_current
-FROM
-  ${ref("tmp_erp_worker_master_scd2")}
+SELECT * FROM ${ref("tmp_erp_worker_master_scd2")}

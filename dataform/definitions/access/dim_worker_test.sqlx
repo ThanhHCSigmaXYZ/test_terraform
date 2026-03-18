@@ -1,16 +1,23 @@
-config {
-  type: "test",
-  dataset: "dim_worker",
-  name: "dim_worker_test"
-}
-
 -- NOTE: mock data designed for deterministic JOIN results
-input "tmp_erp_worker_master_scd2" {
-  SELECT 'w1' AS worker_id, 'hash_alice' AS worker_name_hash, TIMESTAMP('2023-01-01') AS valid_from, TIMESTAMP('2023-01-14') AS valid_to, false AS is_current UNION ALL
-  SELECT 'w1' AS worker_id, 'hash_alicia' AS worker_name_hash, TIMESTAMP('2023-01-15') AS valid_from, TIMESTAMP('9999-12-31') AS valid_to, true AS is_current UNION ALL
-  SELECT 'w2' AS worker_id, 'hash_bob' AS worker_name_hash, TIMESTAMP('2023-01-02') AS valid_from, TIMESTAMP('9999-12-31') AS valid_to, true AS is_current UNION ALL
-  SELECT 'w3' AS worker_id, 'hash_charlie' AS worker_name_hash, TIMESTAMP('2023-02-01') AS valid_from, TIMESTAMP('9999-12-31') AS valid_to, true AS is_current UNION ALL
-  SELECT 'w4' AS worker_id, 'hash_david' AS worker_name_hash, TIMESTAMP('2023-02-05') AS valid_from, TIMESTAMP('9999-12-31') AS valid_to, true AS is_current
+config {
+    type: "test",
+    dataset: "dim_worker"
 }
 
-SELECT * FROM ${self}
+input {
+    name: "tmp_erp_worker_master_scd2",
+    data: [
+        {worker_id: "w1", worker_name: "Worker 1 v1", valid_from: DATE("2023-01-01"), valid_to: DATE("2023-01-02"), is_current: false},
+        {worker_id: "w1", worker_name: "Worker 1 v2", valid_from: DATE("2023-01-02"), valid_to: DATE("9999-12-31"), is_current: true},
+        {worker_id: "w2", worker_name: "Worker 2 v1", valid_from: DATE("2023-01-01"), valid_to: DATE("9999-12-31"), is_current: true}
+    ]
+}
+
+SELECT
+    "w1" as worker_id, "Worker 1 v1" as worker_name, DATE("2023-01-01") as valid_from, DATE("2023-01-02") as valid_to, false as is_current
+UNION ALL
+SELECT
+    "w1" as worker_id, "Worker 1 v2" as worker_name, DATE("2023-01-02") as valid_from, DATE("9999-12-31") as valid_to, true as is_current
+UNION ALL
+SELECT
+    "w2" as worker_id, "Worker 2 v1" as worker_name, DATE("2023-01-01") as valid_from, DATE("9999-12-31") as valid_to, true as is_current

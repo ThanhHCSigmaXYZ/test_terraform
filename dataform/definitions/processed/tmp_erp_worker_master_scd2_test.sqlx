@@ -1,22 +1,29 @@
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
 config {
-  type: "test",
-  dataset: "tmp_erp_worker_master_scd2",
-  name: "tmp_erp_worker_master_scd2_test"
+    type: "test",
+    dataset: "tmp_erp_worker_master_scd2"
 }
 
 input "raw_erp_worker_master" {
-  SELECT 'w1' AS worker_id, 'Alice' AS worker_name, TIMESTAMP('2023-01-01 10:00:00') as etl_loaded_at UNION ALL
-  SELECT 'w1' AS worker_id, 'Alicia' AS worker_name, TIMESTAMP('2023-01-15 10:00:00') as etl_loaded_at UNION ALL
-  SELECT 'w2' AS worker_id, 'Bob' AS worker_name, TIMESTAMP('2023-01-02 10:00:00') as etl_loaded_at UNION ALL
-  SELECT 'w3' AS worker_id, 'Charlie' AS worker_name, TIMESTAMP('2023-02-01 10:00:00') as etl_loaded_at UNION ALL
-  SELECT 'w2' AS worker_id, 'Robert' AS worker_name, TIMESTAMP('2023-02-20 10:00:00') as etl_loaded_at
+    SELECT 'w1' AS worker_id, 'Worker 1 v1' AS worker_name, DATE('2023-01-01') AS etl_loaded_date UNION ALL
+    SELECT 'w2' AS worker_id, 'Worker 2 v1' AS worker_name, DATE('2023-01-01') AS etl_loaded_date UNION ALL
+    SELECT 'w1' AS worker_id, 'Worker 1 v2' AS worker_name, DATE('2023-01-02') AS etl_loaded_date UNION ALL
+    SELECT 'w3' AS worker_id, 'Worker 3 v1' AS worker_name, DATE('2023-01-02') AS etl_loaded_date UNION ALL
+    SELECT 'w1' AS worker_id, 'Worker 1 v3' AS worker_name, DATE('2023-01-03') AS etl_loaded_date
 }
 
--- NOTE: expected output derived from mock data — verify if transformation logic changes
--- Note: worker_name_hash is not calculated as it's non-deterministic without the exact hash function output
+-- Expected output after SCD2 logic
 SELECT
-  'w1' AS worker_id, NULL as worker_name_hash, TIMESTAMP('2023-01-01 10:00:00') AS valid_from, TIMESTAMP('2023-01-15 10:00:00') AS valid_to, false AS is_current UNION ALL
-  SELECT 'w1' AS worker_id, NULL as worker_name_hash, TIMESTAMP('2023-01-15 10:00:00') AS valid_from, TIMESTAMP('9999-12-31 23:59:59') AS valid_to, true AS is_current UNION ALL
-  SELECT 'w2' AS worker_id, NULL as worker_name_hash, TIMESTAMP('2023-01-02 10:00:00') AS valid_from, TIMESTAMP('2023-02-20 10:00:00') AS valid_to, false AS is_current UNION ALL
-  SELECT 'w2' AS worker_id, NULL as worker_name_hash, TIMESTAMP('2023-02-20 10:00:00') AS valid_from, TIMESTAMP('9999-12-31 23:59:59') AS valid_to, true AS is_current UNION ALL
-  SELECT 'w3' AS worker_id, NULL as worker_name_hash, TIMESTAMP('2023-02-01 10:00:00') AS valid_from, TIMESTAMP('9999-12-31 23:59:59') AS valid_to, true AS is_current
+    'w1' AS worker_id, 'Worker 1 v1' AS worker_name, DATE('2023-01-01') AS valid_from, DATE('2023-01-02') AS valid_to, false AS is_current
+UNION ALL
+SELECT
+    'w1' AS worker_id, 'Worker 1 v2' AS worker_name, DATE('2023-01-02') AS valid_from, DATE('2023-01-03') AS valid_to, false AS is_current
+UNION ALL
+SELECT
+    'w1' AS worker_id, 'Worker 1 v3' AS worker_name, DATE('2023-01-03') AS valid_from, DATE('9999-12-31') AS valid_to, true AS is_current
+UNION ALL
+SELECT
+    'w2' AS worker_id, 'Worker 2 v1' AS worker_name, DATE('2023-01-01') AS valid_from, DATE('9999-12-31') AS valid_to, true AS is_current
+UNION ALL
+SELECT
+    'w3' AS worker_id, 'Worker 3 v1' AS worker_name, DATE('2023-01-02') AS valid_from, DATE('9999-12-31') AS valid_to, true AS is_current

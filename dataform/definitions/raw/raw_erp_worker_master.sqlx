@@ -1,14 +1,12 @@
 config {
-  type: "table",
-  schema: "dev_dataform_dataset",
-  name: "raw_erp_worker_master",
-  tags: ["raw"],
-  description: "全社ERPシステムからの作業者マスタデータの取り込み（全量）"
+    type: "table",
+    schema: "dev_dataform_dataset",
+    name: "raw_erp_worker_master"
 }
 
 SELECT
-  *,
-  TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
-  CURRENT_DATE() AS etl_loaded_date
+    *,
+    TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
+    CURRENT_DATE() AS etl_loaded_date
 FROM
-  ${ref("erp_worker_master")}
+    ${ref("erp_worker_master")}

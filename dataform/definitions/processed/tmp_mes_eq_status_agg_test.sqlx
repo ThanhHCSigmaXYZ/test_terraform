@@ -1,22 +1,31 @@
-config {
-  type: "test",
-  dataset: "tmp_mes_eq_status_agg",
-  name: "tmp_mes_eq_status_agg_test"
-}
-
-input "raw_mes_eq_status" {
-  SELECT 'log1' AS status_log_id, 'eq1' AS equipment_id, 'RUN' AS status_code, '2023-01-10 10:00:00' as status_changed_at UNION ALL
-  SELECT 'log2' AS status_log_id, 'eq1' AS equipment_id, 'STOP' AS status_code, '2023-01-10 10:30:00' as status_changed_at UNION ALL
-  SELECT 'log3' AS status_log_id, 'eq1' AS equipment_id, 'RUN' AS status_code, '2023-01-10 10:45:00' as status_changed_at UNION ALL
-  SELECT 'log4' AS status_log_id, 'eq2' AS equipment_id, 'RUN' AS status_code, '2023-01-10 11:00:00' as status_changed_at UNION ALL
-  SELECT 'log5' AS status_log_id, 'eq2' AS equipment_id, 'STOP' AS status_code, '2023-01-10 12:00:00' as status_changed_at
-}
-
 -- NOTE: expected output derived from mock data — verify if transformation logic changes
-SELECT
-  'log1' AS status_log_id, 'eq1' AS equipment_id, 'RUN' AS status_code, TIMESTAMP('2023-01-10 10:00:00') as status_changed_at, DATE('2023-01-10') as status_date, 0 AS duration_sec UNION ALL
-  SELECT 'log2' AS status_log_id, 'eq1' AS equipment_id, 'STOP' AS status_code, TIMESTAMP('2023-01-10 10:30:00') as status_changed_at, DATE('2023-01-10') as status_date, 1800 AS duration_sec UNION ALL
-  SELECT 'log3' AS status_log_id, 'eq1' AS equipment_id, 'RUN' AS status_code, TIMESTAMP('2023-01-10 10:45:00') as status_changed_at, DATE('2023-01-10') as status_date, 900 AS duration_sec UNION ALL
-  SELECT 'log4' AS status_log_id, 'eq2' AS equipment_id, 'RUN' AS status_code, TIMESTAMP('2023-01-10 11:00:00') as status_changed_at, DATE('2023-01-10') as status_date, 0 AS duration_sec UNION ALL
-  SELECT 'log5' AS status_log_id, 'eq2' AS equipment_id, 'STOP' AS status_code, TIMESTAMP('2023-01-10 12:00:00') as status_changed_at, DATE('2023-01-10') as status_date, 3600 AS duration_sec
+config {
+    type: "test",
+    dataset: "tmp_mes_eq_status_agg"
+}
 
+input {
+    name: "raw_mes_eq_status",
+    data: [
+        {status_log_id: "log1", equipment_id: "eq1", status_code: "RUN", status_changed_at: TIMESTAMP("2023-01-01 10:00:00"), factory_code: "F1"},
+        {status_log_id: "log2", equipment_id: "eq1", status_code: "E-101", status_changed_at: TIMESTAMP("2023-01-01 11:00:00"), factory_code: "F1"},
+        {status_log_id: "log3", equipment_id: "eq1", status_code: "RUN", status_changed_at: TIMESTAMP("2023-01-01 11:30:00"), factory_code: "F1"},
+        {status_log_id: "log4", equipment_id: "eq2", status_code: "RUN", status_changed_at: TIMESTAMP("2023-01-01 09:00:00"), factory_code: "F2"},
+        {status_log_id: "log5", equipment_id: "eq2", status_code: "ERR_101", status_changed_at: TIMESTAMP("2023-01-01 10:00:00"), factory_code: "F2"}
+    ]
+}
+
+SELECT
+  "log1" AS status_log_id, "eq1" AS equipment_id, "RUN" AS status_code, TIMESTAMP("2023-01-01 10:00:00") AS status_changed_at, "F1" as factory_code, "RUN" as unified_status_code, NULL as prev_status_changed_at, DATE("2023-01-01") as status_date, NULL as duration_sec
+UNION ALL
+SELECT
+  "log4" AS status_log_id, "eq2" AS equipment_id, "RUN" AS status_code, TIMESTAMP("2023-01-01 09:00:00") AS status_changed_at, "F2" as factory_code, "RUN" as unified_status_code, NULL as prev_status_changed_at, DATE("2023-01-01") as status_date, NULL as duration_sec
+UNION ALL
+SELECT
+  "log2" AS status_log_id, "eq1" AS equipment_id, "E-101" AS status_code, TIMESTAMP("2023-01-01 11:00:00") AS status_changed_at, "F1" as factory_code, "UNIFIED_ERROR_1" as unified_status_code, TIMESTAMP("2023-01-01 10:00:00") as prev_status_changed_at, DATE("2023-01-01") as status_date, 3600 as duration_sec
+UNION ALL
+SELECT
+  "log5" AS status_log_id, "eq2" AS equipment_id, "ERR_101" AS status_code, TIMESTAMP("2023-01-01 10:00:00") AS status_changed_at, "F2" as factory_code, "UNIFIED_ERROR_1" as unified_status_code, TIMESTAMP("2023-01-01 09:00:00") as prev_status_changed_at, DATE("2023-01-01") as status_date, 3600 as duration_sec
+UNION ALL
+SELECT
+  "log3" AS status_log_id, "eq1" AS equipment_id, "RUN" AS status_code, TIMESTAMP("2023-01-01 11:30:00") AS status_changed_at, "F1" as factory_code, "RUN" as unified_status_code, TIMESTAMP("2023-01-01 11:00:00") as prev_status_changed_at, DATE("2023-01-01") as status_date, 1800 as duration_sec

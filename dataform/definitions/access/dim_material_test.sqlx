@@ -1,16 +1,27 @@
-config {
-  type: "test",
-  dataset: "dim_material",
-  name: "dim_material_test"
-}
-
 -- NOTE: mock data designed for deterministic JOIN results
-input "tmp_erp_mat_master_scd2" {
-  SELECT 'mat1' AS material_id, 'Old Name' AS material_name, TIMESTAMP('2023-01-01 10:00:00') AS valid_from, TIMESTAMP('2023-01-15 09:59:59') AS valid_to, false AS is_current UNION ALL
-  SELECT 'mat1' AS material_id, 'New Name' AS material_name, TIMESTAMP('2023-01-15 10:00:00') AS valid_from, TIMESTAMP('9999-12-31 23:59:59') AS valid_to, true AS is_current UNION ALL
-  SELECT 'mat2' AS material_id, 'Material 2' AS material_name, TIMESTAMP('2023-01-02 10:00:00') AS valid_from, TIMESTAMP('9999-12-31 23:59:59') AS valid_to, true AS is_current UNION ALL
-  SELECT 'mat3' AS material_id, 'Material 3' AS material_name, TIMESTAMP('2023-01-03 10:00:00') AS valid_from, TIMESTAMP('9999-12-31 23:59:59') AS valid_to, true AS is_current UNION ALL
-  SELECT 'mat4' AS material_id, 'Material 4' AS material_name, TIMESTAMP('2023-01-04 10:00:00') AS valid_from, TIMESTAMP('9999-12-31 23:59:59') AS valid_to, true AS is_current
+config {
+    type: "test",
+    dataset: "dim_material"
 }
 
-SELECT * FROM ${self}
+input {
+    name: "tmp_erp_mat_master_scd2",
+    data: [
+        {material_id: "mat1", material_name: "Material 1 v1", valid_from: DATE("2023-01-01"), valid_to: DATE("2023-01-02"), is_current: false},
+        {material_id: "mat1", material_name: "Material 1 v2", valid_from: DATE("2023-01-02"), valid_to: DATE("9999-12-31"), is_current: true},
+        {material_id: "mat2", material_name: "Material 2 v1", valid_from: DATE("2023-01-01"), valid_to: DATE("9999-12-31"), is_current: true},
+        {material_id: "mat3", material_name: "Material 3 v1", valid_from: DATE("2023-01-02"), valid_to: DATE("9999-12-31"), is_current: true}
+    ]
+}
+
+SELECT
+    "mat1" as material_id, "Material 1 v1" as material_name, DATE("2023-01-01") as valid_from, DATE("2023-01-02") as valid_to, false as is_current
+UNION ALL
+SELECT
+    "mat1" as material_id, "Material 1 v2" as material_name, DATE("2023-01-02") as valid_from, DATE("9999-12-31") as valid_to, true as is_current
+UNION ALL
+SELECT
+    "mat2" as material_id, "Material 2 v1" as material_name, DATE("2023-01-01") as valid_from, DATE("9999-12-31") as valid_to, true as is_current
+UNION ALL
+SELECT
+    "mat3" as material_id, "Material 3 v1" as material_name, DATE("2023-01-02") as valid_from, DATE("9999-12-31") as valid_to, true as is_current

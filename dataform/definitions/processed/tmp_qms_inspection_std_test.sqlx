@@ -1,21 +1,46 @@
-config {
-  type: "test",
-  dataset: "tmp_qms_inspection_std",
-  name: "tmp_qms_inspection_std_test"
-}
-
-input "raw_qms_inspection" {
-  SELECT 'insp1' as inspection_id, 's1' as product_serial_no, '2023-01-12' as inspection_date_str, '1.5' as measurement_cm, 'PASS' as result UNION ALL
-  SELECT 'insp2' as inspection_id, 's2' as product_serial_no, '2023-01-12' as inspection_date_str, '2.0' as measurement_cm, 'FAIL' as result UNION ALL
-  SELECT 'insp3' as inspection_id, 's3' as product_serial_no, '2023-01-13' as inspection_date_str, '3.1' as measurement_cm, 'PASS' as result UNION ALL
-  SELECT 'insp4' as inspection_id, 's4' as product_serial_no, '2023-01-14' as inspection_date_str, '4.2' as measurement_cm, 'PASS' as result UNION ALL
-  SELECT 'insp5' as inspection_id, 's5' as product_serial_no, '2023-01-14' as inspection_date_str, '5.0' as measurement_cm, 'FAIL' as result
-}
-
 -- NOTE: expected output derived from mock data — verify if transformation logic changes
+config {
+    type: "test",
+    dataset: "tmp_qms_inspection_std"
+}
+
+input {
+    name: "raw_qms_inspection",
+    data: [
+        {inspection_id: "insp1", product_serial_no: "serial1", inspection_date_str: "2023-01-01", inspection_value_str: "10.5", unit_str: "mm"},
+        {inspection_id: "insp2", product_serial_no: "serial2", inspection_date_str: "2023-01-01", inspection_value_str: "1.2", unit_str: "cm"},
+        {inspection_id: "insp3", product_serial_no: "serial3", inspection_date_str: "2023-01-02", inspection_value_str: "9.8", unit_str: "mm"},
+        {inspection_id: "insp4", product_serial_no: "serial4", inspection_date_str: "2023-01-02", inspection_value_str: "1.5", unit_str: "cm"},
+        {inspection_id: "insp5", product_serial_no: "serial5", inspection_date_str: "2023-01-03", inspection_value_str: "11.0", unit_str: "mm"}
+    ]
+}
+
 SELECT
-  'insp1' as inspection_id, 's1' as product_serial_no, DATE('2023-01-12') as inspection_date, 15.0 as measurement_mm, 'PASS' as result UNION ALL
-  SELECT 'insp2' as inspection_id, 's2' as product_serial_no, DATE('2023-01-12') as inspection_date, 20.0 as measurement_mm, 'FAIL' as result UNION ALL
-  SELECT 'insp3' as inspection_id, 's3' as product_serial_no, DATE('2023-01-13') as inspection_date, 31.0 as measurement_mm, 'PASS' as result UNION ALL
-  SELECT 'insp4' as inspection_id, 's4' as product_serial_no, DATE('2023-01-14') as inspection_date, 42.0 as measurement_mm, 'PASS' as result UNION ALL
-  SELECT 'insp5' as inspection_id, 's5' as product_serial_no, DATE('2023-01-14') as inspection_date, 50.0 as measurement_mm, 'FAIL' as result
+    "insp1" as inspection_id,
+    "serial1" as product_serial_no,
+    DATE("2023-01-01") as inspection_date,
+    10.5 as inspection_value_mm
+UNION ALL
+SELECT
+    "insp2" as inspection_id,
+    "serial2" as product_serial_no,
+    DATE("2023-01-01") as inspection_date,
+    12.0 as inspection_value_mm
+UNION ALL
+SELECT
+    "insp3" as inspection_id,
+    "serial3" as product_serial_no,
+    DATE("2023-01-02") as inspection_date,
+    9.8 as inspection_value_mm
+UNION ALL
+SELECT
+    "insp4" as inspection_id,
+    "serial4" as product_serial_no,
+    DATE("2023-01-02") as inspection_date,
+    15.0 as inspection_value_mm
+UNION ALL
+SELECT
+    "insp5" as inspection_id,
+    "serial5" as product_serial_no,
+    DATE("2023-01-03") as inspection_date,
+    11.0 as inspection_value_mm

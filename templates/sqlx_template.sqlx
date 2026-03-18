@@ -3,7 +3,8 @@
 
 config {
   type: "table",
-  schema: "dev_dataform_dataset",
+  schema: "d
+  ",
   name: "stg_example"
 }
 

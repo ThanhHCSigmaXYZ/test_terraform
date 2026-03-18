@@ -1,23 +1,21 @@
 config {
-  type: "table",
-  schema: "dev_dataform_dataset",
-  name: "fct_quality_inspection",
-  tags: ["access"],
-  description: "品質分析用のファクトテーブル作成",
-  dataformCore: "3.0.7",
-  partitionBy: "inspection_date",
-  clusterBy: ["product_serial_no"]
+    type: "table",
+    schema: "dev_dataform_dataset",
+    name: "fct_quality_inspection",
+    partition_by: "inspection_date",
+    cluster_by: ["product_serial_no"]
 }
 
 SELECT
-  q.inspection_id,
-  q.product_serial_no,
-  q.inspection_date,
-  p.order_id,
-  p.worker_id,
-  p.material_id,
-  p.production_lead_time_sec
+    insp.*,
+    prod.order_id,
+    prod.start_time,
+    prod.end_time,
+    prod.worker_id,
+    prod.material_id,
+    prod.manufacturing_lead_time_sec
 FROM
-  ${ref("tmp_qms_inspection_std")} q
+    ${ref("tmp_qms_inspection_std")} AS insp
 LEFT JOIN
-  ${ref("fct_production_performance")} p ON q.product_serial_no = p.product_serial_no
+    ${ref("fct_production_performance")} AS prod
+    ON insp.product_serial_no = prod.product_serial_no

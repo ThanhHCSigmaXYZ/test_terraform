@@ -1,14 +1,12 @@
 config {
-  type: "table",
-  schema: "dev_dataform_dataset",
-  name: "raw_erp_mat_master",
-  tags: ["raw"],
-  description: "全社ERPシステムからの品目マスタデータの取り込み（全量）"
+    type: "table",
+    schema: "dev_dataform_dataset",
+    name: "raw_erp_mat_master"
 }
 
 SELECT
-  *,
-  TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
-  CURRENT_DATE() AS etl_loaded_date
+    *,
+    TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
+    CURRENT_DATE() AS etl_loaded_date
 FROM
-  ${ref("erp_material_master")}
+    ${ref("erp_material_master")}

@@ -1,20 +1,25 @@
 config {
-  type: "test",
-  dataset: "raw_qms_inspection",
-  name: "raw_qms_inspection_test"
+    type: "test",
+    dataset: "raw_qms_inspection"
 }
 
-input "qms_inspection_result" {
-  SELECT 'insp1' AS inspection_id, 'serial1' AS product_serial_no, 'PASS' AS result UNION ALL
-  SELECT 'insp2' AS inspection_id, 'serial2' AS product_serial_no, 'FAIL' AS result UNION ALL
-  SELECT 'insp3' AS inspection_id, 'serial3' AS product_serial_no, 'PASS' AS result UNION ALL
-  SELECT 'insp4' AS inspection_id, 'serial4' AS product_serial_no, 'PASS' AS result UNION ALL
-  SELECT 'insp5' AS inspection_id, 'serial5' AS product_serial_no, 'FAIL' AS result
+input {
+    name: "qms_inspection_result",
+    data: [
+        {inspection_id: "insp1", product_serial_no: "serial1", result: "PASS", source_file_name: "file1.csv"},
+        {inspection_id: "insp2", product_serial_no: "serial2", result: "FAIL", source_file_name: "file1.csv"},
+        {inspection_id: "insp3", product_serial_no: "serial3", result: "PASS", source_file_name: "file2.csv"},
+        {inspection_id: "insp4", product_serial_no: "serial4", result: "PASS", source_file_name: "file2.csv"},
+        {inspection_id: "insp5", product_serial_no: "serial5", result: "FAIL", source_file_name: "file3.csv"}
+    ]
 }
 
-SELECT
-  'insp1' AS inspection_id, 'serial1' AS product_serial_no, 'PASS' AS result, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date, "dummy_filename.csv" AS source_file_name UNION ALL
-  SELECT 'insp2' AS inspection_id, 'serial2' AS product_serial_no, 'FAIL' AS result, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date, "dummy_filename.csv" AS source_file_name UNION ALL
-  SELECT 'insp3' AS inspection_id, 'serial3' AS product_serial_no, 'PASS' AS result, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date, "dummy_filename.csv" AS source_file_name UNION ALL
-  SELECT 'insp4' AS inspection_id, 'serial4' AS product_serial_no, 'PASS' AS result, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date, "dummy_filename.csv" AS source_file_name UNION ALL
-  SELECT 'insp5' AS inspection_id, 'serial5' AS product_serial_no, 'FAIL' AS result, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date, "dummy_filename.csv" AS source_file_name
+SELECT "insp1" AS inspection_id, "serial1" AS product_serial_no, "PASS" AS result, "file1.csv" as source_file_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+UNION ALL
+SELECT "insp2" AS inspection_id, "serial2" AS product_serial_no, "FAIL" AS result, "file1.csv" as source_file_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+UNION ALL
+SELECT "insp3" AS inspection_id, "serial3" AS product_serial_no, "PASS" AS result, "file2.csv" as source_file_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+UNION ALL
+SELECT "insp4" AS inspection_id, "serial4" AS product_serial_no, "PASS" AS result, "file2.csv" as source_file_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+UNION ALL
+SELECT "insp5" AS inspection_id, "serial5" AS product_serial_no, "FAIL" AS result, "file3.csv" as source_file_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date

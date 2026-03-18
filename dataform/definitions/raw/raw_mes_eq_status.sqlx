@@ -1,14 +1,14 @@
 config {
-  type: "table",
-  schema: "dev_dataform_dataset",
-  name: "raw_mes_eq_status",
-  tags: ["raw"],
-  description: "MESからの設備稼働ステータスデータの取り込み（日次差分）"
+    type: "table",
+    schema: "dev_dataform_dataset",
+    name: "raw_mes_eq_status",
+    partition_by: "etl_loaded_date",
+    cluster_by: ["equipment_id"]
 }
 
 SELECT
-  *,
-  TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
-  CURRENT_DATE() AS etl_loaded_date
+    *,
+    TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
+    CURRENT_DATE() AS etl_loaded_date
 FROM
-  ${ref("mes_equipment_status")}
+    ${ref("mes_equipment_status")}

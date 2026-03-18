@@ -1,20 +1,25 @@
 config {
-  type: "test",
-  dataset: "raw_erp_mat_master",
-  name: "raw_erp_mat_master_test"
+    type: "test",
+    dataset: "raw_erp_mat_master"
 }
 
-input "erp_material_master" {
-  SELECT 'mat1' AS material_id, 'Material 1' AS material_name, 'kg' AS unit UNION ALL
-  SELECT 'mat2' AS material_id, 'Material 2' AS material_name, 'g' AS unit UNION ALL
-  SELECT 'mat3' AS material_id, 'Material 3' AS material_name, 'ton' AS unit UNION ALL
-  SELECT 'mat4' AS material_id, 'Material 4' AS material_name, 'm' AS unit UNION ALL
-  SELECT 'mat5' AS material_id, 'Material 5' AS material_name, 'cm' AS unit
+input {
+    name: "erp_material_master",
+    data: [
+        {material_id: "mat1", material_name: "Material 1"},
+        {material_id: "mat2", material_name: "Material 2"},
+        {material_id: "mat3", material_name: "Material 3"},
+        {material_id: "mat4", material_name: "Material 4"},
+        {material_id: "mat5", material_name: "Material 5"}
+    ]
 }
 
-SELECT
-  'mat1' AS material_id, 'Material 1' AS material_name, 'kg' AS unit, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
-  SELECT 'mat2' AS material_id, 'Material 2' AS material_name, 'g' AS unit, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
-  SELECT 'mat3' AS material_id, 'Material 3' AS material_name, 'ton' AS unit, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
-  SELECT 'mat4' AS material_id, 'Material 4' AS material_name, 'm' AS unit, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
-  SELECT 'mat5' AS material_id, 'Material 5' AS material_name, 'cm' AS unit, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+SELECT "mat1" AS material_id, "Material 1" AS material_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+UNION ALL
+SELECT "mat2" AS material_id, "Material 2" AS material_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+UNION ALL
+SELECT "mat3" AS material_id, "Material 3" AS material_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+UNION ALL
+SELECT "mat4" AS material_id, "Material 4" AS material_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+UNION ALL
+SELECT "mat5" AS material_id, "Material 5" AS material_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
