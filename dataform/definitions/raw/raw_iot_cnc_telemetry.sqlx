@@ -3,10 +3,10 @@ config {
   schema: "dev_dataform_dataset",
   name: "raw_iot_cnc_telemetry",
   tags: ["raw"],
-  bigquery: {
-    partitionBy: "etl_loaded_date",
-    clusterBy: ["machine_id"]
-  }
+  description: "エッジサーバーからのIoTセンサーデータの取り込み（ストリーミング）",
+  dataformCore: "3.0.7",
+  partitionBy: "etl_loaded_date",
+  clusterBy: ["machine_id"]
 }
 
 SELECT

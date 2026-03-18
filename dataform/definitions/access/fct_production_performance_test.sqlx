@@ -1,37 +1,31 @@
 config {
   type: "test",
-  dataset: "fct_production_performance"
+  dataset: "fct_production_performance",
+  name: "fct_production_performance_test"
 }
 
 -- NOTE: mock data designed for deterministic JOIN results
 input "tmp_mes_prd_order_cleansed" {
-  SELECT 'order1' as order_id, 'serial1' as product_serial_no, DATE('2023-01-01') as production_date, 'mat1' as material_id, 'w1' as worker_id, TIMESTAMP('2023-01-01 10:00:00') as start_time, TIMESTAMP('2023-01-01 11:00:00') as end_time UNION ALL
-  SELECT 'order2' as order_id, 'serial2' as product_serial_no, DATE('2023-01-02') as production_date, 'mat2' as material_id, 'w2' as worker_id, TIMESTAMP('2023-01-02 12:00:00') as start_time, TIMESTAMP('2023-01-02 12:30:00') as end_time
+  SELECT 'order1' as order_id, 's1' as product_serial_no, 'mat1' as material_id, 'w1' as worker_id, TIMESTAMP('2023-01-10 10:00:00') as start_time, TIMESTAMP('2023-01-10 11:00:00') as end_time, DATE('2023-01-10') as production_date UNION ALL
+  SELECT 'order2' as order_id, 's2' as product_serial_no, 'mat2' as material_id, 'w2' as worker_id, TIMESTAMP('2023-01-11 12:00:00') as start_time, TIMESTAMP('2023-01-11 12:30:00') as end_time, DATE('2023-01-11') as production_date UNION ALL
+  SELECT 'order3' as order_id, 's3' as product_serial_no, 'mat1' as material_id, 'w1' as worker_id, TIMESTAMP('2023-02-15 14:00:00') as start_time, TIMESTAMP('2023-02-15 15:00:00') as end_time, DATE('2023-02-15') as production_date
 }
 
 input "dim_material" {
-  SELECT 'mat1' as material_id, 'Material 1' as material_name UNION ALL
-  SELECT 'mat2' as material_id, 'Material 2' as material_name
+  -- NOTE: [timestamp_col] is designed to fall between [start_col] and [end_col]
+  SELECT 'mat1' AS material_id, TIMESTAMP('2023-01-01') as valid_from, TIMESTAMP('2023-01-31') as valid_to UNION ALL -- for order1
+  SELECT 'mat1' AS material_id, TIMESTAMP('2023-02-01') as valid_from, TIMESTAMP('9999-12-31') as valid_to UNION ALL -- for order3
+  SELECT 'mat2' AS material_id, TIMESTAMP('2023-01-01') as valid_from, TIMESTAMP('9999-12-31') as valid_to    -- for order2
 }
 
 input "dim_worker" {
-  SELECT 'w1' as worker_id, 'Worker 1' as worker_name UNION ALL
-  SELECT 'w2' as worker_id, 'Worker 2' as worker_name
+  -- NOTE: [timestamp_col] is designed to fall between [start_col] and [end_col]
+  SELECT 'w1' AS worker_id, TIMESTAMP('2023-01-01') as valid_from, TIMESTAMP('9999-12-31') as valid_to UNION ALL -- for order1, order3
+  SELECT 'w2' AS worker_id, TIMESTAMP('2023-01-01') as valid_from, TIMESTAMP('9999-12-31') as valid_to    -- for order2
 }
 
 -- NOTE: expected output derived from mock data — verify if transformation logic changes
 SELECT
-  'order1' as order_id,
-  'serial1' as product_serial_no,
-  DATE('2023-01-01') as production_date,
-  'mat1' as material_id,
-  'w1' as worker_id,
-  3600 as production_lead_time_sec
-UNION ALL
-SELECT
-  'order2' as order_id,
-  'serial2' as product_serial_no,
-  DATE('2023-01-02') as production_date,
-  'mat2' as material_id,
-  'w2' as worker_id,
-  1800 as production_lead_time_sec
+  'order1' as order_id, 's1' as product_serial_no, DATE('2023-01-10') as production_date, 'mat1' as material_id, 'w1' as worker_id, 3600 as production_lead_time_sec UNION ALL
+  SELECT 'order2' as order_id, 's2' as product_serial_no, DATE('2023-01-11') as production_date, 'mat2' as material_id, 'w2' as worker_id, 1800 as production_lead_time_sec UNION ALL
+  SELECT 'order3' as order_id, 's3' as product_serial_no, DATE('2023-02-15') as production_date, 'mat1' as material_id, 'w1' as worker_id, 3600 as production_lead_time_sec

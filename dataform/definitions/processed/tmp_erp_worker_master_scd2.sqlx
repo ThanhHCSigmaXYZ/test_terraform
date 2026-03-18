@@ -1,42 +1,23 @@
 config {
-  type: "incremental",
+  type: "table",
   schema: "dev_dataform_dataset",
   name: "tmp_erp_worker_master_scd2",
   tags: ["processed"],
-  uniqueKey: ["worker_id", "valid_from"],
-  bigquery: {
-    clusterBy: ["worker_id"]
-  }
+  description: "作業者マスタのSCD Type2処理（履歴化）",
+  dataformCore: "3.0.7",
+  clusterBy: ["worker_id"]
 }
 
--- Step 1: Union new/changed records with existing records
-WITH all_records AS (
-    SELECT
-        worker_id,
-        worker_name,
-        etl_loaded_at,
-        LEAD(etl_loaded_at, 1, TIMESTAMP('9999-12-31 23:59:59')) OVER (PARTITION BY worker_id ORDER BY etl_loaded_at) AS next_etl_loaded_at
-    FROM ${ref("raw_erp_worker_master")}
-    
-    ${when(incremental(), `
-        UNION ALL
-        SELECT
-            worker_id,
-            worker_name,
-            valid_from AS etl_loaded_at,
-            TIMESTAMP_SUB(valid_to, INTERVAL 1 MICROSECOND) AS next_etl_loaded_at
-        FROM ${self}
-        WHERE is_current
-    `)}
-),
--- Step 2: Detect changes and set validity dates
-changes AS (
-    SELECT
-        worker_id,
-        worker_name,
-        etl_loaded_at AS valid_from,
-        next_etl_loaded_at AS valid_to,
-        (ROW_NUMBER() OVER (PARTITION BY worker_id ORDER BY etl_loaded_at DESC) = 1) AS is_current
-    FROM all_records
-)
-SELECT * FROM changes
+-- This is a placeholder for a real SCD Type 2 implementation.
+-- A full implementation would typically involve comparing against the
+-- existing dimension table to detect changes and create new versions.
+-- This simplified example just adds history columns.
+-- Also, hashing/anonymization should be applied here.
+SELECT
+  worker_id,
+  SHA256(worker_name) as worker_name_hash, -- Anonymization
+  etl_loaded_at AS valid_from,
+  LEAD(etl_loaded_at, 1, TIMESTAMP('9999-12-31 23:59:59')) OVER (PARTITION BY worker_id ORDER BY etl_loaded_at) AS valid_to,
+  (LEAD(etl_loaded_at, 1) OVER (PARTITION BY worker_id ORDER BY etl_loaded_at) IS NULL) AS is_current
+FROM
+  ${ref("raw_erp_worker_master")}

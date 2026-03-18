@@ -3,26 +3,29 @@ config {
   schema: "dev_dataform_dataset",
   name: "tmp_mes_prd_order_cleansed",
   tags: ["processed"],
-  bigquery: {
-    partitionBy: "production_date",
-    clusterBy: ["product_serial_no"]
-  }
+  description: "MES製造実績のクレンジングと型変換",
+  dataformCore: "3.0.7",
+  partitionBy: "production_date",
+  clusterBy: ["product_serial_no"]
 }
 
+WITH base AS (
+  SELECT
+    *
+  FROM
+    ${ref("raw_mes_prd_order")}
+)
 SELECT
   order_id,
   product_serial_no,
+  material_id,
+  worker_id,
+  equipment_id, -- Added this column
   SAFE_CAST(start_time_str AS TIMESTAMP) AS start_time,
   SAFE_CAST(end_time_str AS TIMESTAMP) AS end_time,
-  -- Assuming other columns exist and need normalization/cleaning
-  -- This is a placeholder for full-width to half-width conversion
-  -- In BigQuery, this is often handled with custom functions or specific library calls.
-  -- NORMALIZE(work_note, NFKC) is a conceptual representation.
   COALESCE(work_memo, '') AS work_memo,
-  SAFE_CAST(production_date_str AS DATE) AS production_date
-FROM
-  ${ref("raw_mes_prd_order")}
-WHERE
-  order_id IS NOT NULL
-  AND product_serial_no IS NOT NULL
-  AND SAFE_CAST(start_time_str AS TIMESTAMP) IS NOT NULL
+  DATE(SAFE_CAST(start_time_str AS TIMESTAMP)) as production_date
+  -- other columns
+FROM base
+-- Note: Simplified version of normalization and casting.
+-- Real implementation may need more robust error handling and normalization logic.

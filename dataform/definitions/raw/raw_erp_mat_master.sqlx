@@ -2,7 +2,8 @@ config {
   type: "table",
   schema: "dev_dataform_dataset",
   name: "raw_erp_mat_master",
-  tags: ["raw"]
+  tags: ["raw"],
+  description: "全社ERPシステムからの品目マスタデータの取り込み（全量）"
 }
 
 SELECT

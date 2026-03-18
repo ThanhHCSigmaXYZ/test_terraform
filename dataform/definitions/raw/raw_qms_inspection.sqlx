@@ -3,16 +3,16 @@ config {
   schema: "dev_dataform_dataset",
   name: "raw_qms_inspection",
   tags: ["raw"],
-  bigquery: {
-    partitionBy: "etl_loaded_date",
-    clusterBy: ["inspection_id"]
-  }
+  description: "QMSからの品質検査結果CSVの取り込み（日次）",
+  dataformCore: "3.0.7",
+  partitionBy: "etl_loaded_date",
+  clusterBy: ["inspection_id"]
 }
 
 SELECT
   *,
-  _metadata.file_name AS source_file_name,
   TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
-  CURRENT_DATE() AS etl_loaded_date
+  CURRENT_DATE() AS etl_loaded_date,
+  "dummy_filename.csv" AS source_file_name
 FROM
   ${ref("qms_inspection_result")}

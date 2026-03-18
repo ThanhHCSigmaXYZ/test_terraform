@@ -3,34 +3,42 @@ config {
   schema: "dev_dataform_dataset",
   name: "tmp_mes_eq_status_agg",
   tags: ["processed"],
-  bigquery: {
-    partitionBy: "status_date",
-    clusterBy: ["equipment_id"]
-  }
+  description: "設備状態ログからの稼働・停止時間算出",
+  dataformCore: "3.0.7",
+  partitionBy: "status_date",
+  clusterBy: ["equipment_id"]
 }
 
-WITH Step1_Normalized AS (
+WITH normalized_status AS (
+  -- Step1: Normalize error codes, etc.
+  -- This is a placeholder for actual normalization logic.
   SELECT
-    *,
-    -- Placeholder for error code normalization logic
-    status_code AS unified_status_code,
-    DATE(status_changed_at) AS status_date
+    status_log_id,
+    equipment_id,
+    status_code,
+    SAFE_CAST(status_changed_at AS TIMESTAMP) as status_changed_at,
+    DATE(SAFE_CAST(status_changed_at AS TIMESTAMP)) as status_date
   FROM
     ${ref("raw_mes_eq_status")}
 ),
-Step2_Ordered AS (
+lagged_status AS (
+  -- Step2: Get previous status change time
   SELECT
     *,
-    LAG(status_changed_at, 1) OVER (PARTITION BY equipment_id ORDER BY status_changed_at) as prev_status_changed_at
+    COALESCE(
+      LAG(status_changed_at, 1) OVER (PARTITION BY equipment_id ORDER BY status_changed_at),
+      status_changed_at
+    ) as prev_status_changed_at
   FROM
-    Step1_Normalized
+    normalized_status
 )
+-- Step3: Calculate duration
 SELECT
-  *,
+  status_log_id,
+  equipment_id,
+  status_code,
+  status_changed_at,
+  status_date,
   TIMESTAMP_DIFF(status_changed_at, prev_status_changed_at, SECOND) AS duration_sec
 FROM
-  Step2_Ordered
-WHERE
-  status_log_id IS NOT NULL
-  AND equipment_id IS NOT NULL
-  AND status_code IS NOT NULL
+  lagged_status

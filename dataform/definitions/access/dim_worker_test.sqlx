@@ -1,30 +1,16 @@
 config {
   type: "test",
-  dataset: "dim_worker"
+  dataset: "dim_worker",
+  name: "dim_worker_test"
 }
 
 -- NOTE: mock data designed for deterministic JOIN results
 input "tmp_erp_worker_master_scd2" {
-  SELECT 'w1' as worker_id, 'Worker 1 Old' as worker_name, false as is_current UNION ALL
-  SELECT 'w1' as worker_id, 'Worker 1 Current' as worker_name, true as is_current UNION ALL
-  SELECT 'w2' as worker_id, 'Worker 2' as worker_name, true as is_current UNION ALL
-  SELECT 'w3' as worker_id, 'Worker 3' as worker_name, true as is_current UNION ALL
-  SELECT 'w4' as worker_id, 'Worker 4' as worker_name, true as is_current
+  SELECT 'w1' AS worker_id, 'hash_alice' AS worker_name_hash, TIMESTAMP('2023-01-01') AS valid_from, TIMESTAMP('2023-01-14') AS valid_to, false AS is_current UNION ALL
+  SELECT 'w1' AS worker_id, 'hash_alicia' AS worker_name_hash, TIMESTAMP('2023-01-15') AS valid_from, TIMESTAMP('9999-12-31') AS valid_to, true AS is_current UNION ALL
+  SELECT 'w2' AS worker_id, 'hash_bob' AS worker_name_hash, TIMESTAMP('2023-01-02') AS valid_from, TIMESTAMP('9999-12-31') AS valid_to, true AS is_current UNION ALL
+  SELECT 'w3' AS worker_id, 'hash_charlie' AS worker_name_hash, TIMESTAMP('2023-02-01') AS valid_from, TIMESTAMP('9999-12-31') AS valid_to, true AS is_current UNION ALL
+  SELECT 'w4' AS worker_id, 'hash_david' AS worker_name_hash, TIMESTAMP('2023-02-05') AS valid_from, TIMESTAMP('9999-12-31') AS valid_to, true AS is_current
 }
 
--- NOTE: expected output derived from mock data — verify if transformation logic changes
-SELECT
-  'w1' as worker_id,
-  'Worker 1 Current' as worker_name
-UNION ALL
-SELECT
-  'w2' as worker_id,
-  'Worker 2' as worker_name
-UNION ALL
-SELECT
-  'w3' as worker_id,
-  'Worker 3' as worker_name
-UNION ALL
-SELECT
-  'w4' as worker_id,
-  'Worker 4' as worker_name
+SELECT * FROM ${self}

@@ -2,25 +2,22 @@ config {
   type: "table",
   schema: "dev_dataform_dataset",
   name: "fct_quality_inspection",
-  tags: ["access", "fact"],
-  bigquery: {
-    partitionBy: "inspection_date",
-    clusterBy: ["product_serial_no"]
-  }
+  tags: ["access"],
+  description: "品質分析用のファクトテーブル作成",
+  dataformCore: "3.0.7",
+  partitionBy: "inspection_date",
+  clusterBy: ["product_serial_no"]
 }
 
 SELECT
-  insp.inspection_id,
-  insp.product_serial_no,
-  insp.inspection_date,
-  insp.inspection_value_mm,
-  -- Joining with production performance to add context
-  perf.order_id,
-  perf.material_id,
-  perf.worker_id,
-  perf.production_lead_time_sec
+  q.inspection_id,
+  q.product_serial_no,
+  q.inspection_date,
+  p.order_id,
+  p.worker_id,
+  p.material_id,
+  p.production_lead_time_sec
 FROM
-  ${ref("tmp_qms_inspection_std")} AS insp
+  ${ref("tmp_qms_inspection_std")} q
 LEFT JOIN
-  ${ref("fct_production_performance")} AS perf
-  ON insp.product_serial_no = perf.product_serial_no
+  ${ref("fct_production_performance")} p ON q.product_serial_no = p.product_serial_no

@@ -1,30 +1,16 @@
 config {
   type: "test",
-  dataset: "dim_material"
+  dataset: "dim_material",
+  name: "dim_material_test"
 }
 
 -- NOTE: mock data designed for deterministic JOIN results
 input "tmp_erp_mat_master_scd2" {
-  SELECT 'mat1' as material_id, 'Material 1 Old' as material_name, false as is_current UNION ALL
-  SELECT 'mat1' as material_id, 'Material 1 Current' as material_name, true as is_current UNION ALL
-  SELECT 'mat2' as material_id, 'Material 2' as material_name, true as is_current UNION ALL
-  SELECT 'mat3' as material_id, 'Material 3' as material_name, true as is_current UNION ALL
-  SELECT 'mat4' as material_id, 'Material 4' as material_name, true as is_current
+  SELECT 'mat1' AS material_id, 'Old Name' AS material_name, TIMESTAMP('2023-01-01 10:00:00') AS valid_from, TIMESTAMP('2023-01-15 09:59:59') AS valid_to, false AS is_current UNION ALL
+  SELECT 'mat1' AS material_id, 'New Name' AS material_name, TIMESTAMP('2023-01-15 10:00:00') AS valid_from, TIMESTAMP('9999-12-31 23:59:59') AS valid_to, true AS is_current UNION ALL
+  SELECT 'mat2' AS material_id, 'Material 2' AS material_name, TIMESTAMP('2023-01-02 10:00:00') AS valid_from, TIMESTAMP('9999-12-31 23:59:59') AS valid_to, true AS is_current UNION ALL
+  SELECT 'mat3' AS material_id, 'Material 3' AS material_name, TIMESTAMP('2023-01-03 10:00:00') AS valid_from, TIMESTAMP('9999-12-31 23:59:59') AS valid_to, true AS is_current UNION ALL
+  SELECT 'mat4' AS material_id, 'Material 4' AS material_name, TIMESTAMP('2023-01-04 10:00:00') AS valid_from, TIMESTAMP('9999-12-31 23:59:59') AS valid_to, true AS is_current
 }
 
--- NOTE: expected output derived from mock data — verify if transformation logic changes
-SELECT
-  'mat1' as material_id,
-  'Material 1 Current' as material_name
-UNION ALL
-SELECT
-  'mat2' as material_id,
-  'Material 2' as material_name
-UNION ALL
-SELECT
-  'mat3' as material_id,
-  'Material 3' as material_name
-UNION ALL
-SELECT
-  'mat4' as material_id,
-  'Material 4' as material_name
+SELECT * FROM ${self}

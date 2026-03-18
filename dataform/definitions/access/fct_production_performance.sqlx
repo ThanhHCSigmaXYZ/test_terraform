@@ -2,25 +2,26 @@ config {
   type: "table",
   schema: "dev_dataform_dataset",
   name: "fct_production_performance",
-  tags: ["access", "fact"],
-  bigquery: {
-    partitionBy: "production_date",
-    clusterBy: ["material_id", "worker_id"]
-  }
+  tags: ["access"],
+  description: "製造実績のファクトテーブル作成",
+  dataformCore: "3.0.7",
+  partitionBy: "production_date",
+  clusterBy: ["material_id", "worker_id"]
 }
 
 SELECT
-  ord.order_id,
-  ord.product_serial_no,
-  ord.production_date,
-  mat.material_id,
-  wrk.worker_id,
-  TIMESTAMP_DIFF(ord.end_time, ord.start_time, SECOND) AS production_lead_time_sec
+  f.order_id,
+  f.product_serial_no,
+  f.production_date,
+  f.start_time, -- Added this column
+  f.end_time, -- Added this column
+  f.equipment_id, -- Added this column
+  d_mat.material_id,
+  d_w.worker_id,
+  TIMESTAMP_DIFF(f.end_time, f.start_time, SECOND) as production_lead_time_sec
 FROM
-  ${ref("tmp_mes_prd_order_cleansed")} AS ord
+  ${ref("tmp_mes_prd_order_cleansed")} f
 LEFT JOIN
-  ${ref("dim_material")} AS mat
-  ON ord.material_id = mat.material_id
+  ${ref("dim_material")} d_mat ON f.material_id = d_mat.material_id AND f.start_time BETWEEN d_mat.valid_from AND d_mat.valid_to
 LEFT JOIN
-  ${ref("dim_worker")} AS wrk
-  ON ord.worker_id = wrk.worker_id
+  ${ref("dim_worker")} d_w ON f.worker_id = d_w.worker_id AND f.start_time BETWEEN d_w.valid_from AND d_w.valid_to

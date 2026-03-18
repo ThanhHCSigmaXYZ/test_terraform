@@ -1,56 +1,20 @@
 config {
   type: "test",
-  dataset: "raw_mes_prd_order"
+  dataset: "raw_mes_prd_order",
+  name: "raw_mes_prd_order_test"
 }
 
 input "mes_production_order" {
-  SELECT
-    'order1' AS order_id,
-    'serial1' AS product_serial_no
-  UNION ALL
-  SELECT
-    'order2' AS order_id,
-    'serial2' AS product_serial_no
-  UNION ALL
-  SELECT
-    'order3' AS order_id,
-    'serial3' AS product_serial_no
-  UNION ALL
-  SELECT
-    'order4' AS order_id,
-    'serial4' AS product_serial_no
-  UNION ALL
-  SELECT
-    'order5' AS order_id,
-    'serial5' AS product_serial_no
+  SELECT 'order1' AS order_id, 'serial1' AS product_serial_no, 1 AS quantity UNION ALL
+  SELECT 'order2' AS order_id, 'serial2' AS product_serial_no, 2 AS quantity UNION ALL
+  SELECT 'order3' AS order_id, 'serial3' AS product_serial_no, 3 AS quantity UNION ALL
+  SELECT 'order4' AS order_id, 'serial4' AS product_serial_no, 4 AS quantity UNION ALL
+  SELECT 'order5' AS order_id, 'serial5' AS product_serial_no, 5 AS quantity
 }
 
 SELECT
-  'order1' AS order_id,
-  'serial1' AS product_serial_no,
-  TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
-  CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT
-  'order2' AS order_id,
-  'serial2' AS product_serial_no,
-  TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
-  CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT
-  'order3' AS order_id,
-  'serial3' AS product_serial_no,
-  TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
-  CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT
-  'order4' AS order_id,
-  'serial4' AS product_serial_no,
-  TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
-  CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT
-  'order5' AS order_id,
-  'serial5' AS product_serial_no,
-  TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
-  CURRENT_DATE() AS etl_loaded_date
+  'order1' AS order_id, 'serial1' AS product_serial_no, 1 AS quantity, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'order2' AS order_id, 'serial2' AS product_serial_no, 2 AS quantity, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'order3' AS order_id, 'serial3' AS product_serial_no, 3 AS quantity, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'order4' AS order_id, 'serial4' AS product_serial_no, 4 AS quantity, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  SELECT 'order5' AS order_id, 'serial5' AS product_serial_no, 5 AS quantity, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date

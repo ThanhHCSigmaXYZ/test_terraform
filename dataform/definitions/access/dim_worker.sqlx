@@ -2,15 +2,17 @@ config {
   type: "table",
   schema: "dev_dataform_dataset",
   name: "dim_worker",
-  tags: ["access", "dimension"]
+  tags: ["access"],
+  description: "Worker dimension table with anonymized data.",
+  dataformCore: "3.0.7",
+  clusterBy: ["worker_id"]
 }
 
 SELECT
   worker_id,
-  -- In a real scenario, personal information like names would be hashed or anonymized
-  -- in the processed layer. This is a direct pass-through for demonstration.
-  worker_name
+  worker_name_hash,
+  valid_from,
+  valid_to,
+  is_current
 FROM
   ${ref("tmp_erp_worker_master_scd2")}
-WHERE
-  is_current

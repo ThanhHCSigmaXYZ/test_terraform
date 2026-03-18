@@ -2,23 +2,19 @@ config {
   type: "table",
   schema: "dev_dataform_dataset",
   name: "fct_machine_sensor",
-  tags: ["access", "fact"],
-  bigquery: {
-    partitionBy: "telemetry_date",
-    clusterBy: ["product_serial_no", "machine_id"]
-  }
+  tags: ["access"],
+  description: "センサー推移分析用のファクトテーブル作成",
+  dataformCore: "3.0.7",
+  partitionBy: "telemetry_date",
+  clusterBy: ["product_serial_no", "machine_id"]
 }
 
 SELECT
-  sns.machine_id,
-  sns.telemetry_timestamp,
-  DATE(sns.telemetry_timestamp) AS telemetry_date,
-  perf.product_serial_no,
-  sns.temperature,
-  sns.vibration
+  s.machine_id,
+  s.telemetry_timestamp,
+  s.telemetry_date,
+  p.product_serial_no
 FROM
-  ${ref("tmp_iot_cnc_resampled")} AS sns
+  ${ref("tmp_iot_cnc_resampled")} s
 LEFT JOIN
-  ${ref("fct_production_performance")} AS perf
-  ON sns.machine_id = perf.equipment_id
-  AND sns.telemetry_timestamp BETWEEN perf.start_time AND perf.end_time
+  ${ref("fct_production_performance")} p ON s.machine_id = p.equipment_id AND s.telemetry_timestamp BETWEEN p.start_time AND p.end_time

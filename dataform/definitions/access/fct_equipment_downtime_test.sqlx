@@ -1,34 +1,28 @@
 config {
   type: "test",
-  dataset: "fct_equipment_downtime"
+  dataset: "fct_equipment_downtime",
+  name: "fct_equipment_downtime_test"
 }
 
 -- NOTE: mock data designed for deterministic JOIN results
 input "tmp_mes_eq_status_agg" {
-  -- This status occurs during the production of order1
-  SELECT 'log1' as status_log_id, 'eq1' as equipment_id, 'DOWN' as status_code, 300 as duration_sec, DATE('2023-01-01') as status_date, TIMESTAMP('2023-01-01 10:30:00') as status_changed_at UNION ALL
-  -- This status occurs outside any production time
-  SELECT 'log2' as status_log_id, 'eq1' as equipment_id, 'IDLE' as status_code, 600 as duration_sec, DATE('2023-01-01') as status_date, TIMESTAMP('2023-01-01 12:00:00') as status_changed_at
+  SELECT 'log1' as status_log_id, 'eq1' as equipment_id, 'STOP' as status_code, 300 as duration_sec, TIMESTAMP('2023-01-10 10:05:00') as status_changed_at, DATE('2023-01-10') as status_date UNION ALL -- match
+  SELECT 'log2' as status_log_id, 'eq1' as equipment_id, 'RUN' as status_code, 120 as duration_sec, TIMESTAMP('2023-01-10 10:10:00') as status_changed_at, DATE('2023-01-10') as status_date UNION ALL  -- match
+  SELECT 'log3' as status_log_id, 'eq1' as equipment_id, 'STOP' as status_code, 60 as duration_sec, TIMESTAMP('2023-01-10 11:00:00') as status_changed_at, DATE('2023-01-10') as status_date UNION ALL   -- no match (outside time)
+  SELECT 'log4' as status_log_id, 'eq2' as equipment_id, 'STOP' as status_code, 200 as duration_sec, TIMESTAMP('2023-01-10 10:08:00') as status_changed_at, DATE('2023-01-10') as status_date UNION ALL   -- no match (different equipment)
+  SELECT 'log5' as status_log_id, 'eq1' as equipment_id, 'STOP' as status_code, 50 as duration_sec, TIMESTAMP('2023-01-11 14:00:00') as status_changed_at, DATE('2023-01-11') as status_date      -- match
 }
 
 input "fct_production_performance" {
-  SELECT 'order1' as order_id, 'eq1' as equipment_id, TIMESTAMP('2023-01-01 10:00:00') as start_time, TIMESTAMP('2023-01-01 11:00:00') as end_time
+  -- NOTE: [timestamp_col] is designed to fall between [start_col] and [end_col]
+  SELECT 'order1' as order_id, 'eq1' as equipment_id, TIMESTAMP('2023-01-10 10:00:00') as start_time, TIMESTAMP('2023-01-10 10:15:00') as end_time UNION ALL
+  SELECT 'order2' as order_id, 'eq1' as equipment_id, TIMESTAMP('2023-01-11 13:00:00') as start_time, TIMESTAMP('2023-01-11 15:00:00') as end_time
 }
 
 -- NOTE: expected output derived from mock data — verify if transformation logic changes
--- NOTE: status_changed_at is designed to fall between start_time and end_time for the successful join case
 SELECT
-  'log1' as status_log_id,
-  'eq1' as equipment_id,
-  'DOWN' as status_code,
-  300 as duration_sec,
-  DATE('2023-01-01') as status_date,
-  'order1' as order_id
-UNION ALL
-SELECT
-  'log2' as status_log_id,
-  'eq1' as equipment_id,
-  'IDLE' as status_code,
-  600 as duration_sec,
-  DATE('2023-01-01') as status_date,
-  NULL as order_id
+  'log1' as status_log_id, 'eq1' as equipment_id, 'STOP' as status_code, 300 as duration_sec, DATE('2023-01-10') as status_date, 'order1' as order_id UNION ALL
+  SELECT 'log2' as status_log_id, 'eq1' as equipment_id, 'RUN' as status_code, 120 as duration_sec, DATE('2023-01-10') as status_date, 'order1' as order_id UNION ALL
+  SELECT 'log3' as status_log_id, 'eq1' as equipment_id, 'STOP' as status_code, 60 as duration_sec, DATE('2023-01-10') as status_date, NULL as order_id UNION ALL
+  SELECT 'log4' as status_log_id, 'eq2' as equipment_id, 'STOP' as status_code, 200 as duration_sec, DATE('2023-01-10') as status_date, NULL as order_id UNION ALL
+  SELECT 'log5' as status_log_id, 'eq1' as equipment_id, 'STOP' as status_code, 50 as duration_sec, DATE('2023-01-11') as status_date, 'order2' as order_id

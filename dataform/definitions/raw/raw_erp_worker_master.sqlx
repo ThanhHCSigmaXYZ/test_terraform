@@ -2,7 +2,8 @@ config {
   type: "table",
   schema: "dev_dataform_dataset",
   name: "raw_erp_worker_master",
-  tags: ["raw"]
+  tags: ["raw"],
+  description: "全社ERPシステムからの作業者マスタデータの取り込み（全量）"
 }
 
 SELECT

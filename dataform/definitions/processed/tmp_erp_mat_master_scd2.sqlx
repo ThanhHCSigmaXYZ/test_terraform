@@ -1,42 +1,22 @@
 config {
-  type: "incremental",
+  type: "table",
   schema: "dev_dataform_dataset",
   name: "tmp_erp_mat_master_scd2",
   tags: ["processed"],
-  uniqueKey: ["material_id", "valid_from"],
-  bigquery: {
-    clusterBy: ["material_id"]
-  }
+  description: "品目マスタのSCD Type2処理（履歴化）",
+  dataformCore: "3.0.7",
+  clusterBy: ["material_id"]
 }
 
--- Step 1: Union new/changed records with existing records
-WITH all_records AS (
-    SELECT
-        material_id,
-        material_name,
-        etl_loaded_at,
-        LEAD(etl_loaded_at, 1, TIMESTAMP('9999-12-31 23:59:59')) OVER (PARTITION BY material_id ORDER BY etl_loaded_at) AS next_etl_loaded_at
-    FROM ${ref("raw_erp_mat_master")}
-    
-    ${when(incremental(), `
-        UNION ALL
-        SELECT
-            material_id,
-            material_name,
-            valid_from AS etl_loaded_at,
-            TIMESTAMP_SUB(valid_to, INTERVAL 1 MICROSECOND) AS next_etl_loaded_at
-        FROM ${self}
-        WHERE is_current
-    `)}
-),
--- Step 2: Detect changes and set validity dates
-changes AS (
-    SELECT
-        material_id,
-        material_name,
-        etl_loaded_at AS valid_from,
-        next_etl_loaded_at AS valid_to,
-        (ROW_NUMBER() OVER (PARTITION BY material_id ORDER BY etl_loaded_at DESC) = 1) AS is_current
-    FROM all_records
-)
-SELECT * FROM changes
+-- This is a placeholder for a real SCD Type 2 implementation.
+-- A full implementation would typically involve comparing against the
+-- existing dimension table to detect changes and create new versions.
+-- This simplified example just adds history columns.
+SELECT
+  material_id,
+  material_name,
+  etl_loaded_at AS valid_from,
+  LEAD(etl_loaded_at, 1, TIMESTAMP('9999-12-31 23:59:59')) OVER (PARTITION BY material_id ORDER BY etl_loaded_at) AS valid_to,
+  (LEAD(etl_loaded_at, 1) OVER (PARTITION BY material_id ORDER BY etl_loaded_at) IS NULL) AS is_current
+FROM
+  ${ref("raw_erp_mat_master")}

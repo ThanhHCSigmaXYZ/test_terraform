@@ -1,25 +1,21 @@
 config {
   type: "test",
-  dataset: "tmp_mes_prd_order_cleansed"
+  dataset: "tmp_mes_prd_order_cleansed",
+  name: "tmp_mes_prd_order_cleansed_test"
 }
 
 input "raw_mes_prd_order" {
-  SELECT 'order1' AS order_id, 'serial1' AS product_serial_no, '2023-01-01T10:00:00Z' AS start_time_str, '2023-01-01T11:00:00Z' AS end_time_str, 'Memo 1' AS work_memo, '2023-01-01' as production_date_str UNION ALL
-  SELECT 'order2' AS order_id, 'serial2' AS product_serial_no, '2023-01-01T12:00:00Z' AS start_time_str, '2023-01-01T13:00:00Z' AS end_time_str, NULL AS work_memo, '2023-01-01' as production_date_str UNION ALL
-  SELECT 'order3' AS order_id, 'serial3' AS product_serial_no, '2023-01-02T10:00:00Z' AS start_time_str, '2023-01-02T11:00:00Z' AS end_time_str, 'メモ３' AS work_memo, '2023-01-02' as production_date_str UNION ALL
-  SELECT 'order4' AS order_id, 'serial4' AS product_serial_no, 'bad-date' AS start_time_str, '2023-01-02T13:00:00Z' AS end_time_str, 'Memo 4' AS work_memo, '2023-01-02' as production_date_str UNION ALL
-  SELECT 'order5' AS order_id, 'serial5' AS product_serial_no, '2023-01-03T10:00:00Z' AS start_time_str, '2023-01-03T11:00:00Z' AS end_time_str, 'Memo 5' AS work_memo, '2023-01-03' as production_date_str
+  SELECT 'order1' as order_id, 'serial1' as product_serial_no, '2023-01-01 10:00:00' as start_time_str, '2023-01-01 11:00:00' as end_time_str, 'メモ１' as work_memo UNION ALL
+  SELECT 'order2' as order_id, 'serial2' as product_serial_no, '2023-01-02 10:00:00' as start_time_str, '2023-01-02 11:00:00' as end_time_str, NULL as work_memo UNION ALL
+  SELECT 'order3' as order_id, 'serial3' as product_serial_no, '2023-01-03 10:00:00' as start_time_str, '2023-01-03 11:00:00' as end_time_str, 'メモ３' as work_memo UNION ALL
+  SELECT 'order4' as order_id, 'serial4' as product_serial_no, '2023-01-04 10:00:00' as start_time_str, '2023-01-04 11:00:00' as end_time_str, '' as work_memo UNION ALL
+  SELECT 'order5' as order_id, 'serial5' as product_serial_no, '2023-01-05 10:00:00' as start_time_str, '2023-01-05 11:00:00' as end_time_str, 'メモ５' as work_memo
 }
 
 -- NOTE: expected output derived from mock data — verify if transformation logic changes
 SELECT
-  'order1' AS order_id, 'serial1' AS product_serial_no, TIMESTAMP('2023-01-01T10:00:00Z') AS start_time, TIMESTAMP('2023-01-01T11:00:00Z') AS end_time, 'Memo 1' AS work_memo, DATE('2023-01-01') as production_date
-UNION ALL
-SELECT
-  'order2' AS order_id, 'serial2' AS product_serial_no, TIMESTAMP('2023-01-01T12:00:00Z') AS start_time, TIMESTAMP('2023-01-01T13:00:00Z') AS end_time, '' AS work_memo, DATE('2023-01-01') as production_date
-UNION ALL
-SELECT
-  'order3' AS order_id, 'serial3' AS product_serial_no, TIMESTAMP('2023-01-02T10:00:00Z') AS start_time, TIMESTAMP('2023-01-02T11:00:00Z') AS end_time, 'メモ３' AS work_memo, DATE('2023-01-02') as production_date
-UNION ALL
-SELECT
-  'order5' AS order_id, 'serial5' AS product_serial_no, TIMESTAMP('2023-01-03T10:00:00Z') AS start_time, TIMESTAMP('2023-01-03T11:00:00Z') AS end_time, 'Memo 5' AS work_memo, DATE('2023-01-03') as production_date
+  'order1' as order_id, 'serial1' as product_serial_no, TIMESTAMP('2023-01-01 10:00:00') as start_time, TIMESTAMP('2023-01-01 11:00:00') as end_time, 'メモ１' as work_memo, DATE('2023-01-01') as production_date UNION ALL
+  SELECT 'order2' as order_id, 'serial2' as product_serial_no, TIMESTAMP('2023-01-02 10:00:00') as start_time, TIMESTAMP('2023-01-02 11:00:00') as end_time, '' as work_memo, DATE('2023-01-02') as production_date UNION ALL
+  SELECT 'order3' as order_id, 'serial3' as product_serial_no, TIMESTAMP('2023-01-03 10:00:00') as start_time, TIMESTAMP('2023-01-03 11:00:00') as end_time, 'メモ３' as work_memo, DATE('2023-01-03') as production_date UNION ALL
+  SELECT 'order4' as order_id, 'serial4' as product_serial_no, TIMESTAMP('2023-01-04 10:00:00') as start_time, TIMESTAMP('2023-01-04 11:00:00') as end_time, '' as work_memo, DATE('2023-01-04') as production_date UNION ALL
+  SELECT 'order5' as order_id, 'serial5' as product_serial_no, TIMESTAMP('2023-01-05 10:00:00') as start_time, TIMESTAMP('2023-01-05 11:00:00') as end_time, 'メモ５' as work_memo, DATE('2023-01-05') as production_date

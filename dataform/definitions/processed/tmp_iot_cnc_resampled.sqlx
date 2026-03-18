@@ -3,40 +3,45 @@ config {
   schema: "dev_dataform_dataset",
   name: "tmp_iot_cnc_resampled",
   tags: ["processed"],
-  bigquery: {
-    partitionBy: "telemetry_date",
-    clusterBy: ["machine_id"]
-  }
+  description: "IoTデータ（JSON）の展開とダウンサンプリング",
+  dataformCore: "3.0.7",
+  partitionBy: "telemetry_date",
+  clusterBy: ["machine_id"]
 }
 
-WITH Step1_Expanded AS (
+WITH unfolded_json AS (
   SELECT
     machine_id,
-    timestamp AS telemetry_timestamp,
-    DATE(timestamp) as telemetry_date,
-    SAFE_CAST(JSON_VALUE(payload, '$.temperature') AS FLOAT64) AS temperature,
-    SAFE_CAST(JSON_VALUE(payload, '$.vibration') AS FLOAT64) AS vibration
+    SAFE_CAST(timestamp AS TIMESTAMP) AS telemetry_timestamp,
+    JSON_VALUE(payload, '$.temperature') AS temperature_str,
+    JSON_VALUE(payload, '$.vibration') AS vibration_str
   FROM
     ${ref("raw_iot_cnc_telemetry")}
 ),
-Step2_Filtered AS (
+-- Placeholder for outlier removal logic
+filtered_data AS (
   SELECT
-    *
-  FROM
-    Step1_Expanded
-  -- Placeholder for outlier removal logic. For example, remove temps > 1000.
-  WHERE
-    temperature < 1000
+    machine_id,
+    telemetry_timestamp,
+    SAFE_CAST(temperature_str AS FLOAT64) as temperature,
+    SAFE_CAST(vibration_str AS FLOAT64) as vibration
+  FROM unfolded_json
+  WHERE SAFE_CAST(temperature_str AS FLOAT64) < 1000 -- Example outlier removal
+),
+-- Downsampling to 1-second average
+resampled_data AS (
+  SELECT
+    machine_id,
+    TIMESTAMP_TRUNC(telemetry_timestamp, SECOND) as telemetry_second,
+    AVG(temperature) as avg_temperature,
+    AVG(vibration) as avg_vibration
+  FROM filtered_data
+  GROUP BY 1, 2
 )
--- Step3: Downsampling to 1-second average
 SELECT
   machine_id,
-  TIMESTAMP_TRUNC(telemetry_timestamp, SECOND) as telemetry_timestamp,
-  AVG(temperature) AS temperature,
-  AVG(vibration) AS vibration
-FROM
-  Step2_Filtered
-GROUP BY
-  1, 2
-HAVING
-  machine_id IS NOT NULL AND telemetry_timestamp IS NOT NULL
+  telemetry_second as telemetry_timestamp,
+  avg_temperature as temperature,
+  avg_vibration as vibration,
+  DATE(telemetry_second) as telemetry_date
+FROM resampled_data
