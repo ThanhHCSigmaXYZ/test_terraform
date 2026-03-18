@@ -17,4 +17,4 @@ input "fct_production_performance" {
 
 -- NOTE: expected output derived from mock data — verify if transformation logic changes
 SELECT 1 AS status_log_id, 'EQ-1' AS equipment_id, 'STOPPED' AS status_code, 600 AS duration_sec, 101 AS order_id, DATE('2023-01-01') AS status_date UNION ALL
-SELECT 2 AS status_log_id, 'EQ-2' AS equipment_id, 'STOPPED' AS status_code, 300 AS duration_sec, NULL AS order_id, DATE('2023-01-02') AS status_date
+SELECT 2 AS status_log_id, 'EQ-2' AS equipment_id, 'STOPPED' AS status_code, 300 AS duration_sec, 102 AS order_id, DATE('2023-01-02') AS status_date
