@@ -1,33 +1,23 @@
--- NOTE: mock data designed for deterministic JOIN results
 config {
-    type: "test",
-    dataset: "fct_production_performance"
+  type: "test",
+  dataset: "fct_production_performance"
 }
-
-input {
-    name: "tmp_mes_prd_order_cleansed",
-    data: [
-        {order_id: "order1", material_id: "mat1", worker_id: "w1", product_serial_no: "serial1", start_time: TIMESTAMP("2023-01-01 10:00:00"), end_time: TIMESTAMP("2023-01-01 11:00:00"), production_date: DATE("2023-01-01")},
-        {order_id: "order2", material_id: "mat2", worker_id: "w2", product_serial_no: "serial2", start_time: TIMESTAMP("2023-01-02 12:00:00"), end_time: TIMESTAMP("2023-01-02 12:30:00"), production_date: DATE("2023-01-02")}
-    ]
+-- NOTE: mock data designed for deterministic JOIN results
+input "tmp_mes_prd_order_cleansed" {
+  SELECT 'o1' as order_id, 'psn1' as product_serial_no, 'mat1' as material_id, 'w1' as worker_id, TIMESTAMP('2023-01-01 10:00:00') as start_time, TIMESTAMP('2023-01-01 11:00:00') as end_time, DATE('2023-01-01') as production_date UNION ALL
+  SELECT 'o2' as order_id, 'psn2' as product_serial_no, 'mat2' as material_id, 'w2' as worker_id, TIMESTAMP('2023-01-01 12:00:00') as start_time, TIMESTAMP('2023-01-01 14:00:00') as end_time, DATE('2023-01-01') as production_date
 }
-input {
-    name: "dim_material",
-    data: [
-        {material_id: "mat1", material_name: "Material 1", valid_from: DATE("2023-01-01"), valid_to: DATE("9999-12-31")},
-        {material_id: "mat2", material_name: "Material 2", valid_from: DATE("2023-01-01"), valid_to: DATE("9999-12-31")}
-    ]
+input "dim_material" {
+  SELECT 'mat1' as material_id UNION ALL
+  SELECT 'mat2' as material_id
 }
-input {
-    name: "dim_worker",
-    data: [
-        {worker_id: "w1", worker_name: "Worker 1", valid_from: DATE("2023-01-01"), valid_to: DATE("9999-12-31")},
-        {worker_id: "w2", worker_name: "Worker 2", valid_from: DATE("2023-01-01"), valid_to: DATE("9999-12-31")}
-    ]
+input "dim_worker" {
+  SELECT 'w1' as worker_id UNION ALL
+  SELECT 'w2' as worker_id
 }
 
 SELECT
-    "order1" as order_id, "mat1" as material_id, "w1" as worker_id, "serial1" as product_serial_no, TIMESTAMP("2023-01-01 10:00:00") as start_time, TIMESTAMP("2023-01-01 11:00:00") as end_time, DATE("2023-01-01") as production_date, "Material 1" as material_name, "Worker 1" as worker_name, 3600 as manufacturing_lead_time_sec
+  'o1' as order_id, 'psn1' as product_serial_no, TIMESTAMP('2023-01-01 10:00:00') as start_time, TIMESTAMP('2023-01-01 11:00:00') as end_time, DATE('2023-01-01') as production_date, 'mat1' as material_id, 'w1' as worker_id, 3600 as production_lead_time_seconds
 UNION ALL
 SELECT
-    "order2" as order_id, "mat2" as material_id, "w2" as worker_id, "serial2" as product_serial_no, TIMESTAMP("2023-01-02 12:00:00") as start_time, TIMESTAMP("2023-01-02 12:30:00") as end_time, DATE("2023-01-02") as production_date, "Material 2" as material_name, "Worker 2" as worker_name, 1800 as manufacturing_lead_time_sec
+  'o2' as order_id, 'psn2' as product_serial_no, TIMESTAMP('2023-01-01 12:00:00') as start_time, TIMESTAMP('2023-01-01 14:00:00') as end_time, DATE('2023-01-01') as production_date, 'mat2' as material_id, 'w2' as worker_id, 7200 as production_lead_time_seconds

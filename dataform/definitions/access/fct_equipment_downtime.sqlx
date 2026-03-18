@@ -1,19 +1,23 @@
 config {
-    type: "table",
-    schema: "dev_dataform_dataset",
-    name: "fct_equipment_downtime",
-    partition_by: "status_date",
-    cluster_by: ["equipment_id", "status_code"]
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "fct_equipment_downtime",
+  bigquery: {
+    partitionBy: "status_date",
+    clusterBy: ["equipment_id", "status_code"]
+  }
 }
 
+-- This fact table identifies which product was being worked on during an equipment downtime event.
 SELECT
-    status.*,
-    prod.order_id,
-    prod.product_serial_no
-FROM
-    ${ref("tmp_mes_eq_status_agg")} AS status
-LEFT JOIN
-    ${ref("fct_production_performance")} AS prod
-    ON status.equipment_id = prod.equipment_id
-    -- 状態発生時刻が製造実績の「開始時刻〜終了時刻の間に収まる（BETWEEN）」条件で LEFT JOIN
-    AND status.status_changed_at BETWEEN prod.start_time AND prod.end_time
+  downtime.status_log_id,
+  downtime.equipment_id,
+  downtime.status_code,
+  downtime.duration_sec,
+  downtime.status_date,
+  prod.order_id
+FROM ${ref("tmp_mes_eq_status_agg")} AS downtime
+LEFT JOIN ${ref("fct_production_performance")} AS prod
+  ON downtime.equipment_id = prod.equipment_id
+  -- Non-equi JOIN to find the production order active during the status change
+  AND downtime.status_changed_at BETWEEN prod.start_time AND prod.end_time

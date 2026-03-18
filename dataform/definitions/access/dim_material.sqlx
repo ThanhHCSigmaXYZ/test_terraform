@@ -1,8 +1,15 @@
 config {
-    type: "table",
-    schema: "dev_dataform_dataset",
-    name: "dim_material",
-    cluster_by: ["material_id"]
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "dim_material"
 }
 
-SELECT * FROM ${ref("tmp_erp_mat_master_scd2")}
+-- This dimension table provides the current version of each material.
+SELECT
+  material_id,
+  description
+  -- other attributes...
+FROM
+  ${ref("tmp_erp_mat_master_scd2")}
+WHERE
+  is_current

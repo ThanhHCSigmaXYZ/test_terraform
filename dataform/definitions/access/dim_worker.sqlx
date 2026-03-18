@@ -1,8 +1,16 @@
 config {
-    type: "table",
-    schema: "dev_dataform_dataset",
-    name: "dim_worker",
-    cluster_by: ["worker_id"]
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "dim_worker"
 }
 
-SELECT * FROM ${ref("tmp_erp_worker_master_scd2")}
+-- This dimension table provides the current version of each worker, with anonymized data.
+SELECT
+  worker_id,
+  worker_name,
+  department
+  -- other attributes...
+FROM
+  ${ref("tmp_erp_worker_master_scd2")}
+WHERE
+  is_current

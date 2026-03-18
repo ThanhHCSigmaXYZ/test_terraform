@@ -1,27 +1,17 @@
--- NOTE: mock data designed for deterministic JOIN results
 config {
-    type: "test",
-    dataset: "dim_material"
+  type: "test",
+  dataset: "dim_material"
 }
 
-input {
-    name: "tmp_erp_mat_master_scd2",
-    data: [
-        {material_id: "mat1", material_name: "Material 1 v1", valid_from: DATE("2023-01-01"), valid_to: DATE("2023-01-02"), is_current: false},
-        {material_id: "mat1", material_name: "Material 1 v2", valid_from: DATE("2023-01-02"), valid_to: DATE("9999-12-31"), is_current: true},
-        {material_id: "mat2", material_name: "Material 2 v1", valid_from: DATE("2023-01-01"), valid_to: DATE("9999-12-31"), is_current: true},
-        {material_id: "mat3", material_name: "Material 3 v1", valid_from: DATE("2023-01-02"), valid_to: DATE("9999-12-31"), is_current: true}
-    ]
+-- NOTE: mock data designed for deterministic JOIN results
+input "tmp_erp_mat_master_scd2" {
+  SELECT 'mat1' as material_id, 'v1' as description, false as is_current UNION ALL
+  SELECT 'mat1' as material_id, 'v2' as description, true as is_current UNION ALL
+  SELECT 'mat2' as material_id, 'v1' as description, true as is_current
 }
 
 SELECT
-    "mat1" as material_id, "Material 1 v1" as material_name, DATE("2023-01-01") as valid_from, DATE("2023-01-02") as valid_to, false as is_current
+  'mat1' as material_id, 'v2' as description
 UNION ALL
 SELECT
-    "mat1" as material_id, "Material 1 v2" as material_name, DATE("2023-01-02") as valid_from, DATE("9999-12-31") as valid_to, true as is_current
-UNION ALL
-SELECT
-    "mat2" as material_id, "Material 2 v1" as material_name, DATE("2023-01-01") as valid_from, DATE("9999-12-31") as valid_to, true as is_current
-UNION ALL
-SELECT
-    "mat3" as material_id, "Material 3 v1" as material_name, DATE("2023-01-02") as valid_from, DATE("9999-12-31") as valid_to, true as is_current
+  'mat2' as material_id, 'v1' as description

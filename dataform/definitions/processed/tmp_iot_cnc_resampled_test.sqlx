@@ -1,42 +1,29 @@
--- NOTE: expected output derived from mock data — verify if transformation logic changes
 config {
-    type: "test",
-    dataset: "tmp_iot_cnc_resampled"
+  type: "test",
+  dataset: "tmp_iot_cnc_resampled"
 }
 
-input {
-    name: "raw_iot_cnc_telemetry",
-    data: [
-        -- Valid data for machine 1 at 10:00:00
-        {machine_id: "cnc1", "timestamp": TIMESTAMP("2023-01-01 10:00:00.100"), payload: '{"temp": 200.5, "vib": 0.1}'},
-        {machine_id: "cnc1", "timestamp": TIMESTAMP("2023-01-01 10:00:00.600"), payload: '{"temp": 201.5, "vib": 0.2}'},
-        -- Outlier data for machine 1 (should be excluded)
-        {machine_id: "cnc1", "timestamp": TIMESTAMP("2023-01-01 10:00:01.200"), payload: '{"temp": 9999, "vib": 0.15}'},
-        -- Valid data for machine 2 at 10:00:00
-        {machine_id: "cnc2", "timestamp": TIMESTAMP("2023-01-01 10:00:00.300"), payload: '{"temp": 300, "vib": 0.3}'},
-        -- Valid data for machine 1 at 10:00:02
-        {machine_id: "cnc1", "timestamp": TIMESTAMP("2023-01-01 10:00:02.500"), payload: '{"temp": 205, "vib": 0.3}'}
-    ]
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+
+input "raw_iot_cnc_telemetry" {
+  SELECT 'm1' as machine_id, TIMESTAMP('2023-01-01 10:00:00.100Z') as timestamp, '{"temp": 100.1, "vib": 0.5}' as payload UNION ALL
+  SELECT 'm1' as machine_id, TIMESTAMP('2023-01-01 10:00:00.300Z') as timestamp, '{"temp": 100.3, "vib": 0.6}' as payload UNION ALL
+  SELECT 'm1' as machine_id, TIMESTAMP('2023-01-01 10:00:00.900Z') as timestamp, '{"temp": 100.5, "vib": 0.7}' as payload UNION ALL
+  -- This record should be filtered out as an outlier
+  SELECT 'm1' as machine_id, TIMESTAMP('2023-01-01 10:00:01.200Z') as timestamp, '{"temp": 9999, "vib": 99.9}' as payload UNION ALL
+  SELECT 'm2' as machine_id, TIMESTAMP('2023-01-01 12:00:00.500Z') as timestamp, '{"temp": 150.0, "vib": 1.5}' as payload
 }
 
--- Expected output is the average of the valid data, grouped by 1-second intervals
 SELECT
-    "cnc1" as machine_id,
-    TIMESTAMP("2023-01-01 10:00:00") as telemetry_timestamp,
-    DATE("2023-01-01") as telemetry_date,
-    (200.5 + 201.5) / 2 as temperature,
-    (0.1 + 0.2) / 2 as vibration
+  'm1' AS machine_id,
+  TIMESTAMP('2023-01-01 10:00:00Z') AS telemetry_timestamp,
+  DATE('2023-01-01') as telemetry_date,
+  (100.1 + 100.3 + 100.5) / 3 AS temperature,
+  (0.5 + 0.6 + 0.7) / 3 AS vibration
 UNION ALL
 SELECT
-    "cnc2" as machine_id,
-    TIMESTAMP("2023-01-01 10:00:00") as telemetry_timestamp,
-    DATE("2023-01-01") as telemetry_date,
-    300.0 as temperature,
-    0.3 as vibration
-UNION ALL
-SELECT
-    "cnc1" as machine_id,
-    TIMESTAMP("2023-01-01 10:00:02") as telemetry_timestamp,
-    DATE("2023-01-01") as telemetry_date,
-    205.0 as temperature,
-    0.3 as vibration
+  'm2' AS machine_id,
+  TIMESTAMP('2023-01-01 12:00:00Z') AS telemetry_timestamp,
+  DATE('2023-01-01') as telemetry_date,
+  150.0 as temperature,
+  1.5 as vibration

@@ -1,36 +1,42 @@
 config {
-    type: "table",
-    schema: "dev_dataform_dataset",
-    name: "tmp_iot_cnc_resampled",
-    partition_by: "telemetry_date",
-    cluster_by: ["machine_id"]
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_iot_cnc_resampled",
+  bigquery: {
+    partitionBy: "telemetry_date",
+    clusterBy: ["machine_id"]
+  }
 }
 
+-- This table processes raw IoT telemetry data.
+-- Processing steps:
+-- 1. Expands temperature and vibration data from the JSON payload.
+-- 2. Filters out extreme outlier values.
+-- 3. Downsamples the data by calculating the average readings per second.
+
 WITH
-Step1_parsed AS (
-    -- ① JSON内の温度・振動データをカラムに展開
+  extracted_and_filtered AS (
     SELECT
-        machine_id,
-        timestamp,
-        CAST(JSON_VALUE(payload, '$.temp') AS FLOAT64) as temperature,
-        CAST(JSON_VALUE(payload, '$.vib') AS FLOAT64) as vibration
+      machine_id,
+      timestamp as telemetry_timestamp,
+      -- ①JSON内の温度・振動データをカラムに展開
+      JSON_VALUE(payload, '$.temp') as temperature,
+      JSON_VALUE(payload, '$.vib') as vibration
     FROM
-        ${ref("raw_iot_cnc_telemetry")}
-),
-Step2_filtered AS (
-    -- ② 極端な外れ値（センサー異常）の除外
-    SELECT *
-    FROM Step1_parsed
+      ${ref("raw_iot_cnc_telemetry")}
+    -- ②極端な外れ値（センサー異常）の除外 (Example: temperature between 0 and 1000)
     WHERE
-        temperature BETWEEN 0 AND 1000 -- Assuming a valid temperature range
-        AND vibration BETWEEN 0 AND 1 -- Assuming a valid vibration range
-)
--- ③ 残ったデータを1秒単位の平均値に丸め（ダウンサンプリング）
+      CAST(JSON_VALUE(payload, '$.temp') AS FLOAT64) BETWEEN 0 AND 1000
+  )
 SELECT
-    machine_id,
-    TIMESTAMP_TRUNC(timestamp, SECOND) as telemetry_timestamp,
-    DATE(TIMESTAMP_TRUNC(timestamp, SECOND)) as telemetry_date,
-    AVG(temperature) as temperature,
-    AVG(vibration) as vibration
-FROM Step2_filtered
-GROUP BY 1, 2, 3
+  machine_id,
+  -- ③残ったデータを1秒単位の平均値に丸め（ダウンサンプリング）
+  TIMESTAMP_TRUNC(telemetry_timestamp, SECOND) AS telemetry_timestamp,
+  DATE(TIMESTAMP_TRUNC(telemetry_timestamp, SECOND)) as telemetry_date,
+  AVG(CAST(temperature AS FLOAT64)) AS temperature,
+  AVG(CAST(vibration AS FLOAT64)) AS vibration
+FROM
+  extracted_and_filtered
+GROUP BY
+  machine_id,
+  telemetry_timestamp

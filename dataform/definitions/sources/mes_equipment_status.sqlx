@@ -1,5 +1,5 @@
 config {
-    type: "declaration",
-    schema: "aiready",
-    name: "mes_equipment_status"
+  type: "declaration",
+  schema: "aiready",
+  name: "mes_equipment_status"
 }

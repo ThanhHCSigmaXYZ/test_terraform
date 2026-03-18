@@ -1,33 +1,28 @@
 config {
-    type: "table",
-    schema: "dev_dataform_dataset",
-    name: "tmp_erp_mat_master_scd2",
-    bigquery: {
-        clusterBy: ["material_id"]
-    }
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_erp_mat_master_scd2",
+  bigquery: {
+    clusterBy: ["material_id"]
+  }
 }
 
-WITH changes AS (
-    SELECT
-        material_id,
-        material_name,
-        etl_loaded_date,
-        -- Create a hash to detect changes in relevant columns
-        FARM_FINGERPRINT(TO_JSON_STRING(STRUCT(material_name))) AS row_hash,
-        LAG(FARM_FINGERPRINT(TO_JSON_STRING(STRUCT(material_name))), 1) OVER (PARTITION BY material_id ORDER BY etl_loaded_date) AS prev_row_hash
-    FROM ${ref("raw_erp_mat_master")}
-),
-scd2_logic AS (
-    SELECT
-        material_id,
-        material_name,
-        etl_loaded_date AS valid_from,
-        -- The record is valid until the next change
-        LEAD(etl_loaded_date, 1, DATE('9999-12-31')) OVER (PARTITION BY material_id ORDER BY etl_loaded_date) AS valid_to,
-        -- The latest record for each material is the current one
-        (ROW_NUMBER() OVER (PARTITION BY material_id ORDER BY etl_loaded_date DESC) = 1) AS is_current
-    FROM changes
-    -- A change is when the hash is different from the previous one
-    WHERE prev_row_hash IS NULL OR row_hash != prev_row_hash
+-- This table creates a Type 2 Slowly Changing Dimension for the material master.
+-- It tracks the history of changes by assigning a valid_from and valid_to timestamp to each version of a record.
+
+WITH ranked_changes AS (
+  SELECT
+    *,
+    LEAD(etl_loaded_at, 1, TIMESTAMP('9999-12-31 23:59:59')) OVER (PARTITION BY material_id ORDER BY etl_loaded_at) as next_load_time
+  FROM
+    ${ref("raw_erp_mat_master")}
 )
-SELECT * FROM scd2_logic
+SELECT
+  material_id,
+  description,
+  -- other attributes of the master data
+  etl_loaded_at AS valid_from,
+  next_load_time AS valid_to,
+  (next_load_time = TIMESTAMP('9999-12-31 23:59:59')) AS is_current
+FROM
+  ranked_changes

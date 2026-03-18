@@ -1,25 +1,19 @@
 config {
-    type: "test",
-    dataset: "raw_mes_eq_status"
+  type: "test",
+  dataset: "raw_mes_eq_status"
 }
 
-input {
-    name: "mes_equipment_status",
-    data: [
-        {status_log_id: "log1", equipment_id: "eq1", status_code: "RUN", status_changed_at: "2023-01-01 10:00:00"},
-        {status_log_id: "log2", equipment_id: "eq1", status_code: "STOP", status_changed_at: "2023-01-01 11:00:00"},
-        {status_log_id: "log3", equipment_id: "eq2", status_code: "RUN", status_changed_at: "2023-01-01 12:00:00"},
-        {status_log_id: "log4", equipment_id: "eq2", status_code: "ERROR", status_changed_at: "2023-01-01 13:00:00"},
-        {status_log_id: "log5", equipment_id: "eq1", status_code: "RUN", status_changed_at: "2023-01-01 14:00:00"}
-    ]
+input "mes_equipment_status" {
+  SELECT 1 as status_log_id, 'eq1' as equipment_id, 'RUNNING' as status_code, TIMESTAMP('2023-01-01 10:00:00') as status_changed_at UNION ALL
+  SELECT 2 as status_log_id, 'eq1' as equipment_id, 'STOPPED' as status_code, TIMESTAMP('2023-01-01 11:00:00') as status_changed_at UNION ALL
+  SELECT 3 as status_log_id, 'eq2' as equipment_id, 'RUNNING' as status_code, TIMESTAMP('2023-01-01 10:00:00') as status_changed_at UNION ALL
+  SELECT 4 as status_log_id, 'eq1' as equipment_id, 'RUNNING' as status_code, TIMESTAMP('2023-01-01 12:00:00') as status_changed_at UNION ALL
+  SELECT 5 as status_log_id, 'eq2' as equipment_id, 'ERROR' as status_code, TIMESTAMP('2023-01-01 11:30:00') as status_changed_at
 }
 
-SELECT "log1" AS status_log_id, "eq1" AS equipment_id, "RUN" AS status_code, "2023-01-01 10:00:00" AS status_changed_at, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT "log2" AS status_log_id, "eq1" AS equipment_id, "STOP" AS status_code, "2023-01-01 11:00:00" AS status_changed_at, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT "log3" AS status_log_id, "eq2" AS equipment_id, "RUN" AS status_code, "2023-01-01 12:00:00" AS status_changed_at, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT "log4" AS status_log_id, "eq2" AS equipment_id, "ERROR" AS status_code, "2023-01-01 13:00:00" AS status_changed_at, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT "log5" AS status_log_id, "eq1" AS equipment_id, "RUN" AS status_code, "2023-01-01 14:00:00" AS status_changed_at, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+SELECT
+  1 as status_log_id, 'eq1' as equipment_id, 'RUNNING' as status_code, TIMESTAMP('2023-01-01 10:00:00') as status_changed_at, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  2 as status_log_id, 'eq1' as equipment_id, 'STOPPED' as status_code, TIMESTAMP('2023-01-01 11:00:00') as status_changed_at, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  3 as status_log_id, 'eq2' as equipment_id, 'RUNNING' as status_code, TIMESTAMP('2023-01-01 10:00:00') as status_changed_at, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  4 as status_log_id, 'eq1' as equipment_id, 'RUNNING' as status_code, TIMESTAMP('2023-01-01 12:00:00') as status_changed_at, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  5 as status_log_id, 'eq2' as equipment_id, 'ERROR' as status_code, TIMESTAMP('2023-01-01 11:30:00') as status_changed_at, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date

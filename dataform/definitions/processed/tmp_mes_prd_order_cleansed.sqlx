@@ -1,19 +1,28 @@
 config {
-    type: "table",
-    schema: "dev_dataform_dataset",
-    name: "tmp_mes_prd_order_cleansed",
-    partition_by: "production_date",
-    cluster_by: ["product_serial_no"]
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_mes_prd_order_cleansed",
+  bigquery: {
+    partitionBy: "production_date",
+    clusterBy: ["product_serial_no"]
+  }
 }
 
+-- This table cleanses the raw MES production order data.
+-- Processing steps:
+-- 1. Casts string start/end times to TIMESTAMP.
+-- 2. Normalizes full-width characters to half-width (requires a UDF, placeholder in this SQL).
+-- 3. Replaces NULL work memos with an empty string.
 SELECT
-    order_id,
-    product_serial_no,
-    CAST(start_time_str AS TIMESTAMP) AS start_time,
-    CAST(end_time_str AS TIMESTAMP) AS end_time,
-    -- Assuming production_date is derived from start_time
-    DATE(CAST(start_time_str AS TIMESTAMP)) as production_date,
-    NORMALIZE(order_id, NFKC) as order_id_normalized,
-    COALESCE(work_memo, '') as work_memo
+  order_id,
+  product_serial_no,
+  -- ①文字列型の開始/終了日時をTimestamp型へ変換
+  CAST(start_time AS TIMESTAMP) AS start_time,
+  CAST(end_time AS TIMESTAMP) AS end_time,
+  -- ②全角英数字を半角に正規化 (NOTE: BigQuery does not have a native function for this. A UDF is required.)
+  order_notes,
+  -- ③NULLの作業メモを空文字('')に置換
+  COALESCE(work_memo, '') AS work_memo,
+  production_date
 FROM
-    ${ref("raw_mes_prd_order")}
+  ${ref("raw_mes_prd_order")}

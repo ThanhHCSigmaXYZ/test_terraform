@@ -89,7 +89,7 @@ Follow these steps automatically without asking for confirmation:
 ---
 
 ## SQLX Code Rules
-- Follow the structure and format defined in `templates/sqlx_template.sqlx`
+- Follow the structure and format defined in `templates/sqlx_template.sqlx` for table generating and for test generating is in `templates/sqlx_test_template.sqlx`
 - type must be: "table" for main file, "test" for test file
 - schema must always be: dev_dataform_dataset
 - Always use `${ref("table_name")}` to reference source tables
@@ -97,7 +97,7 @@ Follow these steps automatically without asking for confirmation:
  ```
   config {
     type: "table",
-    schema: "ev_dataform_dataset",
+    schema: "dev_dataform_dataset",
     name: "table_name"
   }
   ```
@@ -127,7 +127,7 @@ Follow these steps automatically without asking for confirmation:
 
 ### Common Rules (all layers)
 - config block must include BOTH: `type: "test"` AND `dataset: "[table_name]"`
-- input block must use SQL `SELECT ... UNION ALL` syntax — never JSON format
+- input block syntax is STRICTLY `input "table_name" { SELECT col1, col2 FROM ... UNION ALL SELECT ... }` — NEVER use `input { name: "...", data: [...] }` (that object/array format does not exist in Dataform and causes a compile error)
 - Mock data must have at least 5 rows
 - Never include `CURRENT_TIMESTAMP()` anywhere in the test file
 - The expected output is a bare `SELECT` statement after the last `input {}` block — NEVER wrap it in `expected { ... }` (Dataform does not support that syntax)

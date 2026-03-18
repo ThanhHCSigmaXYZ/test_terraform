@@ -1,14 +1,17 @@
 config {
-    type: "table",
-    schema: "dev_dataform_dataset",
-    name: "raw_iot_cnc_telemetry",
-    partition_by: "etl_loaded_date",
-    cluster_by: ["machine_id"]
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "raw_iot_cnc_telemetry",
+  bigquery: {
+    partitionBy: "etl_loaded_date",
+    clusterBy: ["machine_id"]
+  }
 }
 
+-- This table copies data from the source cnc_machine_telemetry and adds ETL metadata.
 SELECT
-    *,
-    TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
-    CURRENT_DATE() AS etl_loaded_date
+  *,
+  TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
+  CURRENT_DATE() AS etl_loaded_date
 FROM
-    ${ref("cnc_machine_telemetry")}
+  ${ref("cnc_machine_telemetry")}

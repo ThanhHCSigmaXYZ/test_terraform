@@ -1,0 +1,58 @@
+-- Test file template for Dataform unit tests
+-- Use this as a reference for generating new test files
+-- CRITICAL: File must be named <dataset>_test.sqlx and placed alongside the main SQLX file
+
+-- ============================================================
+-- SECTION 1: config block
+-- ============================================================
+-- type: "test" is mandatory
+-- dataset: must exactly match the `name` field in the main SQLX config
+-- NEVER add schema, tags, or bigquery block here
+
+config {
+    type: "test",
+    dataset: "tmp_example_table"
+}
+
+-- ============================================================
+-- SECTION 2: input block(s)
+-- ============================================================
+-- One input block per table referenced via ${ref()} in the main SQL
+-- Syntax: input "source_table_name" { SELECT ... UNION ALL SELECT ... }
+-- NEVER use: input { name: "...", data: [...] }  ← does not exist in Dataform
+-- Column names must match exactly what the main SQL expects from that source
+-- Always use single quotes for string literals
+-- Use at least 5 rows designed to exercise all meaningful code paths
+
+input "raw_source_table" {
+    SELECT 'id1' AS record_id, 'alpha' AS category, 10.0 AS amount, DATE('2023-01-01') AS record_date UNION ALL
+    SELECT 'id2' AS record_id, 'beta'  AS category, 20.0 AS amount, DATE('2023-01-01') AS record_date UNION ALL
+    SELECT 'id3' AS record_id, 'alpha' AS category, 30.0 AS amount, DATE('2023-01-02') AS record_date UNION ALL
+    SELECT 'id4' AS record_id, 'beta'  AS category, 40.0 AS amount, DATE('2023-01-02') AS record_date UNION ALL
+    SELECT 'id5' AS record_id, 'alpha' AS category, 50.0 AS amount, DATE('2023-01-03') AS record_date
+}
+
+-- If the main SQL JOINs a second table, add another input block:
+-- input "raw_lookup_table" {
+--     SELECT 'alpha' AS category, 'Alpha Label' AS label UNION ALL
+--     SELECT 'beta'  AS category, 'Beta Label'  AS label
+-- }
+
+-- ============================================================
+-- SECTION 3: expected output
+-- ============================================================
+-- Bare SELECT after the last input block — NEVER wrap in expected { }
+-- Values must be hardcoded literals derived by manually tracing the SQL logic
+-- Row order must match BigQuery's actual output order:
+--   - For queries with PARTITION BY window functions: all rows of partition 1
+--     (in window ORDER BY sequence) come before all rows of partition 2, etc.
+--   - For simple GROUP BY or aggregations: order may vary — match accordingly
+-- Float arithmetic: use the same expression as the SQL, not a decimal literal
+--   e.g. use (10.0 + 30.0 + 50.0) / 3 instead of 30.0 to avoid IEEE 754 mismatch
+
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+SELECT
+    'alpha' AS category, (10.0 + 30.0 + 50.0) / 3 AS average_amount, 3 AS record_count
+UNION ALL
+SELECT
+    'beta'  AS category, (20.0 + 40.0) / 2        AS average_amount, 2 AS record_count

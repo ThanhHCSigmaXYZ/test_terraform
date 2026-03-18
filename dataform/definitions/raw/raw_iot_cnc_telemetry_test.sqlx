@@ -1,25 +1,19 @@
 config {
-    type: "test",
-    dataset: "raw_iot_cnc_telemetry"
+  type: "test",
+  dataset: "raw_iot_cnc_telemetry"
 }
 
-input {
-    name: "cnc_machine_telemetry",
-    data: [
-        {machine_id: "cnc1", "timestamp": "2023-01-01 10:00:00", payload: '{"temp": 200, "vib": 0.1}'},
-        {machine_id: "cnc1", "timestamp": "2023-01-01 10:00:01", payload: '{"temp": 201, "vib": 0.11}'},
-        {machine_id: "cnc2", "timestamp": "2023-01-01 10:00:00", payload: '{"temp": 250, "vib": 0.2}'},
-        {machine_id: "cnc2", "timestamp": "2023-01-01 10:00:01", payload: '{"temp": 251, "vib": 0.21}'},
-        {machine_id: "cnc1", "timestamp": "2023-01-01 10:00:02", payload: '{"temp": 202, "vib": 0.12}'}
-    ]
+input "cnc_machine_telemetry" {
+  SELECT 'machine1' as machine_id, TIMESTAMP('2023-01-01 10:00:00') as timestamp, '{"temp": 50, "vib": 1.2}' as payload UNION ALL
+  SELECT 'machine1' as machine_id, TIMESTAMP('2023-01-01 10:00:01') as timestamp, '{"temp": 51, "vib": 1.3}' as payload UNION ALL
+  SELECT 'machine2' as machine_id, TIMESTAMP('2023-01-01 10:00:00') as timestamp, '{"temp": 60, "vib": 2.2}' as payload UNION ALL
+  SELECT 'machine1' as machine_id, TIMESTAMP('2023-01-01 10:00:02') as timestamp, '{"temp": 52, "vib": 1.4}' as payload UNION ALL
+  SELECT 'machine2' as machine_id, TIMESTAMP('2023-01-01 10:00:01') as timestamp, '{"temp": 61, "vib": 2.3}' as payload
 }
 
-SELECT "cnc1" AS machine_id, "2023-01-01 10:00:00" AS timestamp, '{"temp": 200, "vib": 0.1}' AS payload, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT "cnc1" AS machine_id, "2023-01-01 10:00:01" AS timestamp, '{"temp": 201, "vib": 0.11}' AS payload, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT "cnc2" AS machine_id, "2023-01-01 10:00:00" AS timestamp, '{"temp": 250, "vib": 0.2}' AS payload, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT "cnc2" AS machine_id, "2023-01-01 10:00:01" AS timestamp, '{"temp": 251, "vib": 0.21}' AS payload, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT "cnc1" AS machine_id, "2023-01-01 10:00:02" AS timestamp, '{"temp": 202, "vib": 0.12}' AS payload, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+SELECT
+  'machine1' as machine_id, TIMESTAMP('2023-01-01 10:00:00') as timestamp, '{"temp": 50, "vib": 1.2}' as payload, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  'machine1' as machine_id, TIMESTAMP('2023-01-01 10:00:01') as timestamp, '{"temp": 51, "vib": 1.3}' as payload, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  'machine2' as machine_id, TIMESTAMP('2023-01-01 10:00:00') as timestamp, '{"temp": 60, "vib": 2.2}' as payload, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  'machine1' as machine_id, TIMESTAMP('2023-01-01 10:00:02') as timestamp, '{"temp": 52, "vib": 1.4}' as payload, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  'machine2' as machine_id, TIMESTAMP('2023-01-01 10:00:01') as timestamp, '{"temp": 61, "vib": 2.3}' as payload, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date

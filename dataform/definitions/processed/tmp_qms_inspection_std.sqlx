@@ -1,20 +1,28 @@
 config {
-    type: "table",
-    schema: "dev_dataform_dataset",
-    name: "tmp_qms_inspection_std",
-    partition_by: "inspection_date",
-    cluster_by: ["product_serial_no"]
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_qms_inspection_std",
+  bigquery: {
+    partitionBy: "inspection_date",
+    clusterBy: ["product_serial_no"]
+  }
 }
 
+-- This table standardizes the raw QMS inspection data.
+-- Processing steps:
+-- 1. Casts all columns from STRING to their appropriate data types.
+-- 2. Normalizes different units of measurement into a standard unit (e.g., cm).
+
 SELECT
-    inspection_id,
-    product_serial_no,
-    CAST(inspection_date_str AS DATE) as inspection_date,
-    -- ・単位が異なる検査項目（mmとcmなど）を標準単位に換算して統一
-    CASE
-        WHEN unit_str = 'cm' THEN CAST(inspection_value_str AS FLOAT64) * 10
-        WHEN unit_str = 'mm' THEN CAST(inspection_value_str AS FLOAT64)
-        ELSE CAST(inspection_value_str AS FLOAT64)
-    END as inspection_value_mm
+  inspection_id,
+  product_serial_no,
+  CAST(inspection_date AS DATE) AS inspection_date,
+  CAST(inspector AS STRING) AS inspector,
+  -- 単位が異なる検査項目（mmとcmなど）を標準単位に換算して統一
+  CASE
+    WHEN measurement_unit = 'mm' THEN CAST(measurement_value AS FLOAT64) / 10
+    WHEN measurement_unit = 'cm' THEN CAST(measurement_value AS FLOAT64)
+    ELSE CAST(measurement_value AS FLOAT64)
+  END AS measurement_value_cm
 FROM
-    ${ref("raw_qms_inspection")}
+  ${ref("raw_qms_inspection")}

@@ -1,14 +1,17 @@
 config {
-    type: "table",
-    schema: "dev_dataform_dataset",
-    name: "raw_qms_inspection",
-    partition_by: "etl_loaded_date",
-    cluster_by: ["inspection_id"]
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "raw_qms_inspection",
+  bigquery: {
+    partitionBy: "etl_loaded_date",
+    clusterBy: ["inspection_id"]
+  }
 }
 
+-- This table copies data from the source qms_inspection_result and adds ETL metadata.
 SELECT
-    *,
-    TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
-    CURRENT_DATE() AS etl_loaded_date
+  *,
+  TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
+  CURRENT_DATE() AS etl_loaded_date
 FROM
-    ${ref("qms_inspection_result")}
+  ${ref("qms_inspection_result")}

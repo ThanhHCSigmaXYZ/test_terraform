@@ -1,23 +1,17 @@
--- NOTE: mock data designed for deterministic JOIN results
 config {
-    type: "test",
-    dataset: "dim_worker"
+  type: "test",
+  dataset: "dim_worker"
 }
 
-input {
-    name: "tmp_erp_worker_master_scd2",
-    data: [
-        {worker_id: "w1", worker_name: "Worker 1 v1", valid_from: DATE("2023-01-01"), valid_to: DATE("2023-01-02"), is_current: false},
-        {worker_id: "w1", worker_name: "Worker 1 v2", valid_from: DATE("2023-01-02"), valid_to: DATE("9999-12-31"), is_current: true},
-        {worker_id: "w2", worker_name: "Worker 2 v1", valid_from: DATE("2023-01-01"), valid_to: DATE("9999-12-31"), is_current: true}
-    ]
+-- NOTE: mock data designed for deterministic JOIN results
+input "tmp_erp_worker_master_scd2" {
+  SELECT 'w1_hash' as worker_id, 'w1' as worker_name, 'Dept A' as department, false as is_current UNION ALL
+  SELECT 'w1_hash' as worker_id, 'w1' as worker_name, 'Dept B' as department, true as is_current UNION ALL
+  SELECT 'w2_hash' as worker_id, 'w2' as worker_name, 'Dept C' as department, true as is_current
 }
 
 SELECT
-    "w1" as worker_id, "Worker 1 v1" as worker_name, DATE("2023-01-01") as valid_from, DATE("2023-01-02") as valid_to, false as is_current
+  'w1_hash' as worker_id, 'w1' as worker_name, 'Dept B' as department
 UNION ALL
 SELECT
-    "w1" as worker_id, "Worker 1 v2" as worker_name, DATE("2023-01-02") as valid_from, DATE("9999-12-31") as valid_to, true as is_current
-UNION ALL
-SELECT
-    "w2" as worker_id, "Worker 2 v1" as worker_name, DATE("2023-01-01") as valid_from, DATE("9999-12-31") as valid_to, true as is_current
+  'w2_hash' as worker_id, 'w2' as worker_name, 'Dept C' as department

@@ -1,29 +1,30 @@
 config {
-    type: "table",
-    schema: "dev_dataform_dataset",
-    name: "tmp_erp_worker_master_scd2",
-    bigquery: {
-        clusterBy: ["worker_id"]
-    }
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_erp_worker_master_scd2",
+  bigquery: {
+    clusterBy: ["worker_id"]
+  }
 }
 
-WITH changes AS (
-    SELECT
-        worker_id,
-        worker_name,
-        etl_loaded_date,
-        FARM_FINGERPRINT(TO_JSON_STRING(STRUCT(worker_name))) AS row_hash,
-        LAG(FARM_FINGERPRINT(TO_JSON_STRING(STRUCT(worker_name))), 1) OVER (PARTITION BY worker_id ORDER BY etl_loaded_date) AS prev_row_hash
-    FROM ${ref("raw_erp_worker_master")}
-),
-scd2_logic AS (
-    SELECT
-        worker_id,
-        worker_name,
-        etl_loaded_date AS valid_from,
-        LEAD(etl_loaded_date, 1, DATE('9999-12-31')) OVER (PARTITION BY worker_id ORDER BY etl_loaded_date) AS valid_to,
-        (ROW_NUMBER() OVER (PARTITION BY worker_id ORDER BY etl_loaded_date DESC) = 1) AS is_current
-    FROM changes
-    WHERE prev_row_hash IS NULL OR row_hash != prev_row_hash
+-- This table creates a Type 2 Slowly Changing Dimension for the worker master.
+-- It tracks the history of changes and anonymizes personal data.
+
+WITH ranked_changes AS (
+  SELECT
+    *,
+    LEAD(etl_loaded_at, 1, TIMESTAMP('9999-12-31 23:59:59')) OVER (PARTITION BY worker_id ORDER BY etl_loaded_at) as next_load_time
+  FROM
+    ${ref("raw_erp_worker_master")}
 )
-SELECT * FROM scd2_logic
+SELECT
+  -- Anonymize personal data
+  SHA256(worker_id) as worker_id,
+  '-- Anonymized --' as worker_name,
+  department,
+  -- other attributes
+  etl_loaded_at AS valid_from,
+  next_load_time AS valid_to,
+  (next_load_time = TIMESTAMP('9999-12-31 23:59:59')) AS is_current
+FROM
+  ranked_changes

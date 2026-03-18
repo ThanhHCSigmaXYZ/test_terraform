@@ -1,61 +1,21 @@
--- NOTE: expected output derived from mock data — verify if transformation logic changes
 config {
-    type: "test",
-    dataset: "tmp_mes_prd_order_cleansed"
+  type: "test",
+  dataset: "tmp_mes_prd_order_cleansed"
 }
 
-input {
-    name: "raw_mes_prd_order",
-    data: [
-        {order_id: "ＡＢC-1", product_serial_no: "serial1", start_time_str: "2023-01-01 10:00:00", end_time_str: "2023-01-01 11:00:00", work_memo: "memo1"},
-        {order_id: "ABC-2", product_serial_no: "serial2", start_time_str: "2023-01-01 12:00:00", end_time_str: "2023-01-01 13:00:00", work_memo: NULL},
-        {order_id: "ＡＢC-3", product_serial_no: "serial3", start_time_str: "2023-01-02 10:00:00", end_time_str: "2023-01-02 11:00:00", work_memo: "memo3"},
-        {order_id: "ABC-4", product_serial_no: "serial4", start_time_str: "2023-01-02 12:00:00", end_time_str: "2023-01-02 13:00:00", work_memo: NULL},
-        {order_id: "ＡＢC-5", product_serial_no: "serial5", start_time_str: "2023-01-03 10:00:00", end_time_str: "2023-01-03 11:00:00", work_memo: "memo5"}
-    ]
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+
+input "raw_mes_prd_order" {
+  SELECT 'o1' as order_id, 'psn1' as product_serial_no, '2023-01-01T10:00:00Z' as start_time, '2023-01-01T11:00:00Z' as end_time, 'Notes １' as order_notes, 'Memo 1' as work_memo, DATE '2023-01-01' as production_date UNION ALL
+  SELECT 'o2' as order_id, 'psn2' as product_serial_no, '2023-01-01T12:00:00Z' as start_time, '2023-01-01T13:00:00Z' as end_time, 'Notes ２' as order_notes, NULL as work_memo, DATE '2023-01-01' as production_date UNION ALL
+  SELECT 'o3' as order_id, 'psn3' as product_serial_no, '2023-01-02T10:00:00Z' as start_time, '2023-01-02T11:00:00Z' as end_time, 'Notes ３' as order_notes, 'Memo 3' as work_memo, DATE '2023-01-02' as production_date UNION ALL
+  SELECT 'o4' as order_id, 'psn4' as product_serial_no, '2023-01-02T12:00:00Z' as start_time, '2023-01-02T13:00:00Z' as end_time, 'Notes ４' as order_notes, NULL as work_memo, DATE '2023-01-02' as production_date UNION ALL
+  SELECT 'o5' as order_id, 'psn5' as product_serial_no, '2023-01-03T10:00:00Z' as start_time, '2023-01-03T11:00:00Z' as end_time, 'Notes ５' as order_notes, 'Memo 5' as work_memo, DATE '2023-01-03' as production_date
 }
 
 SELECT
-    "ABC-1" AS order_id,
-    "serial1" AS product_serial_no,
-    TIMESTAMP("2023-01-01 10:00:00") AS start_time,
-    TIMESTAMP("2023-01-01 11:00:00") AS end_time,
-    DATE("2023-01-01") as production_date,
-    "ABC-1" as order_id_normalized,
-    "memo1" as work_memo
-UNION ALL
-SELECT
-    "ABC-2" AS order_id,
-    "serial2" AS product_serial_no,
-    TIMESTAMP("2023-01-01 12:00:00") AS start_time,
-    TIMESTAMP("2023-01-01 13:00:00") AS end_time,
-    DATE("2023-01-01") as production_date,
-    "ABC-2" as order_id_normalized,
-    "" as work_memo
-UNION ALL
-SELECT
-    "ABC-3" AS order_id,
-    "serial3" AS product_serial_no,
-    TIMESTAMP("2023-01-02 10:00:00") AS start_time,
-    TIMESTAMP("2023-01-02 11:00:00") AS end_time,
-    DATE("2023-01-02") as production_date,
-    "ABC-3" as order_id_normalized,
-    "memo3" as work_memo
-UNION ALL
-SELECT
-    "ABC-4" AS order_id,
-    "serial4" AS product_serial_no,
-    TIMESTAMP("2023-01-02 12:00:00") AS start_time,
-    TIMESTAMP("2023-01-02 13:00:00") AS end_time,
-    DATE("2023-01-02") as production_date,
-    "ABC-4" as order_id_normalized,
-    "" as work_memo
-UNION ALL
-SELECT
-    "ABC-5" AS order_id,
-    "serial5" AS product_serial_no,
-    TIMESTAMP("2023-01-03 10:00:00") AS start_time,
-    TIMESTAMP("2023-01-03 11:00:00") AS end_time,
-    DATE("2023-01-03") as production_date,
-    "ABC-5" as order_id_normalized,
-    "memo5" as work_memo
+  'o1' as order_id, 'psn1' as product_serial_no, TIMESTAMP('2023-01-01T10:00:00Z') as start_time, TIMESTAMP('2023-01-01T11:00:00Z') as end_time, 'Notes １' as order_notes, 'Memo 1' as work_memo, DATE '2023-01-01' as production_date UNION ALL
+  'o2' as order_id, 'psn2' as product_serial_no, TIMESTAMP('2023-01-01T12:00:00Z') as start_time, TIMESTAMP('2023-01-01T13:00:00Z') as end_time, 'Notes ２' as order_notes, '' as work_memo, DATE '2023-01-01' as production_date UNION ALL
+  'o3' as order_id, 'psn3' as product_serial_no, TIMESTAMP('2023-01-02T10:00:00Z') as start_time, TIMESTAMP('2023-01-02T11:00:00Z') as end_time, 'Notes ３' as order_notes, 'Memo 3' as work_memo, DATE '2023-01-02' as production_date UNION ALL
+  'o4' as order_id, 'psn4' as product_serial_no, TIMESTAMP('2023-01-02T12:00:00Z') as start_time, TIMESTAMP('2023-01-02T13:00:00Z') as end_time, 'Notes ４' as order_notes, '' as work_memo, DATE '2023-01-02' as production_date UNION ALL
+  'o5' as order_id, 'psn5' as product_serial_no, TIMESTAMP('2023-01-03T10:00:00Z') as start_time, TIMESTAMP('2023-01-03T11:00:00Z') as end_time, 'Notes ５' as order_notes, 'Memo 5' as work_memo, DATE '2023-01-03' as production_date

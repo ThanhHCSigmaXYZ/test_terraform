@@ -1,25 +1,19 @@
 config {
-    type: "test",
-    dataset: "raw_erp_worker_master"
+  type: "test",
+  dataset: "raw_erp_worker_master"
 }
 
-input {
-    name: "erp_worker_master",
-    data: [
-        {worker_id: "w1", worker_name: "Worker 1"},
-        {worker_id: "w2", worker_name: "Worker 2"},
-        {worker_id: "w3", worker_name: "Worker 3"},
-        {worker_id: "w4", worker_name: "Worker 4"},
-        {worker_id: "w5", worker_name: "Worker 5"}
-    ]
+input "erp_worker_master" {
+  SELECT 'w1' as worker_id, 'Worker 1' as worker_name UNION ALL
+  SELECT 'w2' as worker_id, 'Worker 2' as worker_name UNION ALL
+  SELECT 'w3' as worker_id, 'Worker 3' as worker_name UNION ALL
+  SELECT 'w4' as worker_id, 'Worker 4' as worker_name UNION ALL
+  SELECT 'w5' as worker_id, 'Worker 5' as worker_name
 }
 
-SELECT "w1" AS worker_id, "Worker 1" AS worker_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT "w2" AS worker_id, "Worker 2" AS worker_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT "w3" AS worker_id, "Worker 3" AS worker_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT "w4" AS worker_id, "Worker 4" AS worker_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
-UNION ALL
-SELECT "w5" AS worker_id, "Worker 5" AS worker_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
+SELECT
+  'w1' as worker_id, 'Worker 1' as worker_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  'w2' as worker_id, 'Worker 2' as worker_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  'w3' as worker_id, 'Worker 3' as worker_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  'w4' as worker_id, 'Worker 4' as worker_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+  'w5' as worker_id, 'Worker 5' as worker_name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date
