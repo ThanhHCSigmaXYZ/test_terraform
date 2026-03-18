@@ -131,6 +131,7 @@ Follow these steps automatically without asking for confirmation:
 - Mock data must have at least 5 rows
 - Never include `CURRENT_TIMESTAMP()` anywhere in the test file
 - The expected output is a bare `SELECT` statement after the last `input {}` block — NEVER wrap it in `expected { ... }` (Dataform does not support that syntax)
+- Every row in UNION ALL — both in `input` blocks and in the expected output — MUST start with `SELECT`. NEVER use the shorthand `SELECT col1 UNION ALL col2` where subsequent rows omit `SELECT`. Correct: `SELECT col1 UNION ALL SELECT col2`. Wrong: `SELECT col1 UNION ALL col2` (causes syntax error)
 - The `expected` output MUST use hardcoded literal values — NEVER use `SELECT ... FROM ${ref(...)}`, `SELECT ... FROM ${ self.name }`, or any table reference
 - Expected output values must be deterministically calculable from the mock input data
 - Always use single quotes for string literals

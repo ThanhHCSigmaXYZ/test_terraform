@@ -43,6 +43,9 @@ input "raw_source_table" {
 -- ============================================================
 -- Bare SELECT after the last input block — NEVER wrap in expected { }
 -- Values must be hardcoded literals derived by manually tracing the SQL logic
+-- CRITICAL: every row in a UNION ALL MUST start with SELECT — including rows after the first.
+--   CORRECT:   SELECT col1, col2 UNION ALL SELECT col1, col2
+--   WRONG:     SELECT col1, col2 UNION ALL col1, col2   ← syntax error
 -- Row order must match BigQuery's actual output order:
 --   - For queries with PARTITION BY window functions: all rows of partition 1
 --     (in window ORDER BY sequence) come before all rows of partition 2, etc.
@@ -51,8 +54,6 @@ input "raw_source_table" {
 --   e.g. use (10.0 + 30.0 + 50.0) / 3 instead of 30.0 to avoid IEEE 754 mismatch
 
 -- NOTE: expected output derived from mock data — verify if transformation logic changes
-SELECT
-    'alpha' AS category, (10.0 + 30.0 + 50.0) / 3 AS average_amount, 3 AS record_count
+SELECT 'alpha' AS category, (10.0 + 30.0 + 50.0) / 3 AS average_amount, 3 AS record_count
 UNION ALL
-SELECT
-    'beta'  AS category, (20.0 + 40.0) / 2        AS average_amount, 2 AS record_count
+SELECT 'beta'  AS category, (20.0 + 40.0) / 2        AS average_amount, 2 AS record_count

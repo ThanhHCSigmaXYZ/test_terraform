@@ -1,5 +1,0 @@
-config {
-  type: "declaration",
-  schema: "aiready",
-  name: "qms_inspection_result"
-}

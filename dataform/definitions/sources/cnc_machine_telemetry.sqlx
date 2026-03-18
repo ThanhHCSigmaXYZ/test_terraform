@@ -1,5 +1,0 @@
-config {
-  type: "declaration",
-  schema: "aiready",
-  name: "cnc_machine_telemetry"
-}
