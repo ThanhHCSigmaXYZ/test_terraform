@@ -1,0 +1,24 @@
+-- NOTE: mock data designed for deterministic JOIN results
+config {
+  type: "test",
+  dataset: "fct_production_performance"
+}
+
+input "tmp_mes_prd_order_cleansed" {
+  SELECT 1 AS order_id, 'PN-1' AS product_serial_no, TIMESTAMP('2023-01-01 10:00:00') AS start_time, TIMESTAMP('2023-01-01 11:00:00') AS end_time, 'MAT-1' AS material_id, 'W-1' AS worker_id, DATE('2023-01-01') AS production_date UNION ALL
+  SELECT 2 AS order_id, 'PN-2' AS product_serial_no, TIMESTAMP('2023-01-02 10:00:00') AS start_time, TIMESTAMP('2023-01-02 11:30:00') AS end_time, 'MAT-2' AS material_id, 'W-2' AS worker_id, DATE('2023-01-02') AS production_date
+}
+
+input "dim_material" {
+  SELECT 'MAT-1' AS material_id UNION ALL
+  SELECT 'MAT-2' AS material_id
+}
+
+input "dim_worker" {
+  SELECT 'W-1' AS worker_id UNION ALL
+  SELECT 'W-2' AS worker_id
+}
+
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+SELECT 1 AS order_id, 'PN-1' AS product_serial_no, TIMESTAMP('2023-01-01 10:00:00') AS start_time, TIMESTAMP('2023-01-01 11:00:00') AS end_time, 3600 AS production_lead_time_sec, 'MAT-1' AS material_id, 'W-1' AS worker_id, DATE('2023-01-01') AS production_date UNION ALL
+SELECT 2 AS order_id, 'PN-2' AS product_serial_no, TIMESTAMP('2023-01-02 10:00:00') AS start_time, TIMESTAMP('2023-01-02 11:30:00') AS end_time, 5400 AS production_lead_time_sec, 'MAT-2' AS material_id, 'W-2' AS worker_id, DATE('2023-01-02') AS production_date

@@ -1,0 +1,22 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_qms_inspection_std",
+  bigquery: {
+    partitionBy: "inspection_date",
+    clusterBy: ["product_serial_no"]
+  }
+}
+
+SELECT
+  CAST(inspection_id AS INT64) AS inspection_id,
+  product_serial_no,
+  CAST(inspection_date AS DATE) AS inspection_date,
+  CAST(result AS FLOAT64) AS result_value,
+  -- Example of unit conversion
+  CASE
+    WHEN unit = 'cm' THEN CAST(result AS FLOAT64) * 10
+    ELSE CAST(result AS FLOAT64)
+  END AS result_mm
+FROM
+  ${ref("raw_qms_inspection")}

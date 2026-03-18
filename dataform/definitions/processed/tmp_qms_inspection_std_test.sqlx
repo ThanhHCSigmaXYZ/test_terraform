@@ -1,0 +1,19 @@
+config {
+  type: "test",
+  dataset: "tmp_qms_inspection_std"
+}
+
+input "raw_qms_inspection" {
+  SELECT '1' AS inspection_id, 'PN-1' AS product_serial_no, '2023-01-01' AS inspection_date, '10.5' AS result, 'mm' AS unit UNION ALL
+  SELECT '2' AS inspection_id, 'PN-2' AS product_serial_no, '2023-01-02' AS inspection_date, '1.2' AS result, 'cm' AS unit UNION ALL
+  SELECT '3' AS inspection_id, 'PN-3' AS product_serial_no, '2023-01-03' AS inspection_date, '9.8' AS result, 'mm' AS unit UNION ALL
+  SELECT '4' AS inspection_id, 'PN-4' AS product_serial_no, '2023-01-04' AS inspection_date, '1.5' AS result, 'cm' AS unit UNION ALL
+  SELECT '5' AS inspection_id, 'PN-5' AS product_serial_no, '2023-01-05' AS inspection_date, '11.0' AS result, 'mm' AS unit
+}
+
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+SELECT 1 AS inspection_id, 'PN-1' AS product_serial_no, DATE('2023-01-01') AS inspection_date, 10.5 AS result_value, 10.5 AS result_mm UNION ALL
+SELECT 2 AS inspection_id, 'PN-2' AS product_serial_no, DATE('2023-01-02') AS inspection_date, 1.2 AS result_value, 12.0 AS result_mm UNION ALL
+SELECT 3 AS inspection_id, 'PN-3' AS product_serial_no, DATE('2023-01-03') AS inspection_date, 9.8 AS result_value, 9.8 AS result_mm UNION ALL
+SELECT 4 AS inspection_id, 'PN-4' AS product_serial_no, DATE('2023-01-04') AS inspection_date, 1.5 AS result_value, 15.0 AS result_mm UNION ALL
+SELECT 5 AS inspection_id, 'PN-5' AS product_serial_no, DATE('2023-01-05') AS inspection_date, 11.0 AS result_value, 11.0 AS result_mm

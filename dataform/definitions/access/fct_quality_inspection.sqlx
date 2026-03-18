@@ -1,0 +1,21 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "fct_quality_inspection",
+  bigquery: {
+    partitionBy: "inspection_date",
+    clusterBy: ["product_serial_no"]
+  }
+}
+
+SELECT
+  std.inspection_id,
+  std.product_serial_no,
+  std.result_mm,
+  perf.worker_id,
+  perf.machine_id,
+  std.inspection_date
+FROM
+  ${ref("tmp_qms_inspection_std")} AS std
+  LEFT JOIN ${ref("fct_production_performance")} AS perf
+  ON std.product_serial_no = perf.product_serial_no

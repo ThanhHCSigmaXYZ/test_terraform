@@ -1,0 +1,23 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "fct_production_performance",
+  bigquery: {
+    partitionBy: "production_date",
+    clusterBy: ["material_id", "worker_id"]
+  }
+}
+
+SELECT
+  po.order_id,
+  po.product_serial_no,
+  po.start_time,
+  po.end_time,
+  TIMESTAMP_DIFF(po.end_time, po.start_time, SECOND) AS production_lead_time_sec,
+  dm.material_id,
+  dw.worker_id,
+  po.production_date
+FROM
+  ${ref("tmp_mes_prd_order_cleansed")} AS po
+  LEFT JOIN ${ref("dim_material")} AS dm ON po.material_id = dm.material_id
+  LEFT JOIN ${ref("dim_worker")} AS dw ON po.worker_id = dw.worker_id

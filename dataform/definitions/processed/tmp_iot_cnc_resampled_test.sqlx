@@ -1,0 +1,18 @@
+config {
+  type: "test",
+  dataset: "tmp_iot_cnc_resampled"
+}
+
+input "raw_iot_cnc_telemetry" {
+  SELECT 'C-1' AS machine_id, TIMESTAMP('2023-01-01 00:00:00.123') AS timestamp, '{"temp": 25.5}' AS payload UNION ALL
+  SELECT 'C-1' AS machine_id, TIMESTAMP('2023-01-01 00:00:00.456') AS timestamp, '{"temp": 25.7}' AS payload UNION ALL
+  SELECT 'C-2' AS machine_id, TIMESTAMP('2023-01-01 00:00:00.789') AS timestamp, '{"temp": 30.1}' AS payload UNION ALL
+  SELECT 'C-1' AS machine_id, TIMESTAMP('2023-01-01 00:00:01.123') AS timestamp, '{"temp": 26.0}' AS payload UNION ALL
+  SELECT 'C-2' AS machine_id, TIMESTAMP('2023-01-01 00:00:01.456') AS timestamp, '{"temp": 30.3}' AS payload
+}
+
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+SELECT 'C-1' AS machine_id, TIMESTAMP('2023-01-01 00:00:00') AS telemetry_timestamp, (25.5 + 25.7) / 2 AS temperature, DATE('2023-01-01') AS telemetry_date UNION ALL
+SELECT 'C-2' AS machine_id, TIMESTAMP('2023-01-01 00:00:00') AS telemetry_timestamp, 30.1 AS temperature, DATE('2023-01-01') AS telemetry_date UNION ALL
+SELECT 'C-1' AS machine_id, TIMESTAMP('2023-01-01 00:00:01') AS telemetry_timestamp, 26.0 AS temperature, DATE('2023-01-01') AS telemetry_date UNION ALL
+SELECT 'C-2' AS machine_id, TIMESTAMP('2023-01-01 00:00:01') AS telemetry_timestamp, 30.3 AS temperature, DATE('2023-01-01') AS telemetry_date

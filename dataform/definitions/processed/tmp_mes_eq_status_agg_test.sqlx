@@ -1,0 +1,19 @@
+config {
+  type: "test",
+  dataset: "tmp_mes_eq_status_agg"
+}
+
+input "raw_mes_eq_status" {
+  SELECT 1 AS status_log_id, 'EQ-1' AS equipment_id, 'RUNNING' AS status_code, TIMESTAMP('2023-01-01 00:00:00') AS status_changed_at UNION ALL
+  SELECT 2 AS status_log_id, 'EQ-1' AS equipment_id, 'STOPPED' AS status_code, TIMESTAMP('2023-01-01 01:00:00') AS status_changed_at UNION ALL
+  SELECT 3 AS status_log_id, 'EQ-2' AS equipment_id, 'RUNNING' AS status_code, TIMESTAMP('2023-01-01 00:00:00') AS status_changed_at UNION ALL
+  SELECT 4 AS status_log_id, 'EQ-2' AS equipment_id, 'MAINTENANCE' AS status_code, TIMESTAMP('2023-01-01 02:00:00') AS status_changed_at UNION ALL
+  SELECT 5 AS status_log_id, 'EQ-1' AS equipment_id, 'RUNNING' AS status_code, TIMESTAMP('2023-01-01 03:00:00') AS status_changed_at
+}
+
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+SELECT 1 AS status_log_id, 'EQ-1' AS equipment_id, 'RUNNING' AS status_code, TIMESTAMP('2023-01-01 00:00:00') AS status_changed_at, NULL AS duration_sec, DATE('2023-01-01') AS status_date UNION ALL
+SELECT 2 AS status_log_id, 'EQ-1' AS equipment_id, 'STOPPED' AS status_code, TIMESTAMP('2023-01-01 01:00:00') AS status_changed_at, 3600 AS duration_sec, DATE('2023-01-01') AS status_date UNION ALL
+SELECT 5 AS status_log_id, 'EQ-1' AS equipment_id, 'RUNNING' AS status_code, TIMESTAMP('2023-01-01 03:00:00') AS status_changed_at, 7200 AS duration_sec, DATE('2023-01-01') AS status_date UNION ALL
+SELECT 3 AS status_log_id, 'EQ-2' AS equipment_id, 'RUNNING' AS status_code, TIMESTAMP('2023-01-01 00:00:00') AS status_changed_at, NULL AS duration_sec, DATE('2023-01-01') AS status_date UNION ALL
+SELECT 4 AS status_log_id, 'EQ-2' AS equipment_id, 'MAINTENANCE' AS status_code, TIMESTAMP('2023-01-01 02:00:00') AS status_changed_at, 7200 AS duration_sec, DATE('2023-01-01') AS status_date

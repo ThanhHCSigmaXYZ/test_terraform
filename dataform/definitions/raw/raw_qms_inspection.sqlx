@@ -1,0 +1,16 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "raw_qms_inspection",
+  bigquery: {
+    partitionBy: "etl_loaded_date",
+    clusterBy: ["inspection_id"]
+  }
+}
+
+SELECT
+  *,
+  TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at,
+  CURRENT_DATE() AS etl_loaded_date
+FROM
+  ${ref("qms_inspection_result")}

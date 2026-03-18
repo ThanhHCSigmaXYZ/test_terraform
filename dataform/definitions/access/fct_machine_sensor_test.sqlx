@@ -1,0 +1,20 @@
+-- NOTE: mock data designed for deterministic JOIN results
+config {
+  type: "test",
+  dataset: "fct_machine_sensor"
+}
+
+input "tmp_iot_cnc_resampled" {
+  -- NOTE: [timestamp_col] is designed to fall between [start_col] and [end_col]
+  SELECT 'C-1' AS machine_id, TIMESTAMP('2023-01-01 10:30:00') AS telemetry_timestamp, 25.5 AS temperature, DATE('2023-01-01') AS telemetry_date UNION ALL
+  SELECT 'C-2' AS machine_id, TIMESTAMP('2023-01-02 12:00:00') AS telemetry_timestamp, 30.1 AS temperature, DATE('2023-01-02') AS telemetry_date
+}
+
+input "fct_production_performance" {
+  SELECT 'PN-1' AS product_serial_no, 'C-1' AS machine_id, TIMESTAMP('2023-01-01 10:00:00') AS start_time, TIMESTAMP('2023-01-01 11:00:00') AS end_time UNION ALL
+  SELECT 'PN-2' AS product_serial_no, 'C-2' AS machine_id, TIMESTAMP('2023-01-02 11:00:00') AS start_time, TIMESTAMP('2023-01-02 11:59:59') AS end_time
+}
+
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+SELECT 'C-1' AS machine_id, TIMESTAMP('2023-01-01 10:30:00') AS telemetry_timestamp, 25.5 AS temperature, 'PN-1' AS product_serial_no, DATE('2023-01-01') AS telemetry_date UNION ALL
+SELECT 'C-2' AS machine_id, TIMESTAMP('2023-01-02 12:00:00') AS telemetry_timestamp, 30.1 AS temperature, NULL AS product_serial_no, DATE('2023-01-02') AS telemetry_date
