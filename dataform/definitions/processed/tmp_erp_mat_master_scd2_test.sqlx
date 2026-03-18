@@ -1,0 +1,19 @@
+config {
+  type: "test",
+  dataset: "tmp_erp_mat_master_scd2"
+}
+
+input "raw_erp_mat_master" {
+  SELECT 'MAT-1' AS material_id, 'Desc 1' AS description, TIMESTAMP('2023-01-01 00:00:00') AS etl_loaded_at UNION ALL
+  SELECT 'MAT-1' AS material_id, 'Desc 2' AS description, TIMESTAMP('2023-01-05 00:00:00') AS etl_loaded_at UNION ALL
+  SELECT 'MAT-2' AS material_id, 'Desc 3' AS description, TIMESTAMP('2023-01-02 00:00:00') AS etl_loaded_at UNION ALL
+  SELECT 'MAT-1' AS material_id, 'Desc 3' AS description, TIMESTAMP('2023-01-10 00:00:00') AS etl_loaded_at UNION ALL
+  SELECT 'MAT-2' AS material_id, 'Desc 4' AS description, TIMESTAMP('2023-01-08 00:00:00') AS etl_loaded_at
+}
+
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+SELECT 'MAT-1' AS material_id, 'Desc 1' AS description, TIMESTAMP('2023-01-01 00:00:00') AS valid_from, TIMESTAMP('2023-01-05 00:00:00') AS valid_to, false AS is_current UNION ALL
+SELECT 'MAT-1' AS material_id, 'Desc 2' AS description, TIMESTAMP('2023-01-05 00:00:00') AS valid_from, TIMESTAMP('2023-01-10 00:00:00') AS valid_to, false AS is_current UNION ALL
+SELECT 'MAT-1' AS material_id, 'Desc 3' AS description, TIMESTAMP('2023-01-10 00:00:00') AS valid_from, TIMESTAMP('9999-12-31 23:59:59') AS valid_to, true AS is_current UNION ALL
+SELECT 'MAT-2' AS material_id, 'Desc 3' AS description, TIMESTAMP('2023-01-02 00:00:00') AS valid_from, TIMESTAMP('2023-01-08 00:00:00') AS valid_to, false AS is_current UNION ALL
+SELECT 'MAT-2' AS material_id, 'Desc 4' AS description, TIMESTAMP('2023-01-08 00:00:00') AS valid_from, TIMESTAMP('9999-12-31 23:59:59') AS valid_to, true AS is_current

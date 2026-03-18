@@ -1,0 +1,18 @@
+config {
+  type: "test",
+  dataset: "raw_erp_worker_master"
+}
+
+input "erp_worker_master" {
+  SELECT 'W-1' AS worker_id, 'Worker 1' AS name UNION ALL
+  SELECT 'W-2' AS worker_id, 'Worker 2' AS name UNION ALL
+  SELECT 'W-3' AS worker_id, 'Worker 3' AS name UNION ALL
+  SELECT 'W-4' AS worker_id, 'Worker 4' AS name UNION ALL
+  SELECT 'W-5' AS worker_id, 'Worker 5' AS name
+}
+
+SELECT 'W-1' AS worker_id, 'Worker 1' AS name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'W-2' AS worker_id, 'Worker 2' AS name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'W-3' AS worker_id, 'Worker 3' AS name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'W-4' AS worker_id, 'Worker 4' AS name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'W-5' AS worker_id, 'Worker 5' AS name, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date

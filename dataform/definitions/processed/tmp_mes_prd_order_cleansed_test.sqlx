@@ -1,0 +1,19 @@
+config {
+  type: "test",
+  dataset: "tmp_mes_prd_order_cleansed"
+}
+
+input "raw_mes_prd_order" {
+  SELECT 1 AS order_id, 'PN-1' AS product_serial_no, '2023-01-01 10:00:00' AS start_time, '2023-01-01 11:00:00' AS end_time, 'NOTES-１' AS notes, NULL AS work_memo UNION ALL
+  SELECT 2 AS order_id, 'PN-2' AS product_serial_no, '2023-01-02 10:00:00' AS start_time, '2023-01-02 11:00:00' AS end_time, 'NOTES-２' AS notes, 'memo' AS work_memo UNION ALL
+  SELECT 3 AS order_id, 'PN-3' AS product_serial_no, '2023-01-03 10:00:00' AS start_time, '2023-01-03 11:00:00' AS end_time, 'NOTES-３' AS notes, NULL AS work_memo UNION ALL
+  SELECT 4 AS order_id, 'PN-4' AS product_serial_no, '2023-01-04 10:00:00' AS start_time, '2023-01-04 11:00:00' AS end_time, 'NOTES-４' AS notes, 'memo' AS work_memo UNION ALL
+  SELECT 5 AS order_id, 'PN-5' AS product_serial_no, '2023-01-05 10:00:00' AS start_time, '2023-01-05 11:00:00' AS end_time, 'NOTES-５' AS notes, NULL AS work_memo
+}
+
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+SELECT 1 AS order_id, 'PN-1' AS product_serial_no, TIMESTAMP('2023-01-01 10:00:00') AS start_time, TIMESTAMP('2023-01-01 11:00:00') AS end_time, 'NOTES-1' AS notes, '' AS work_memo, DATE('2023-01-01') AS production_date UNION ALL
+SELECT 2 AS order_id, 'PN-2' AS product_serial_no, TIMESTAMP('2023-01-02 10:00:00') AS start_time, TIMESTAMP('2023-01-02 11:00:00') AS end_time, 'NOTES-2' AS notes, 'memo' AS work_memo, DATE('2023-01-02') AS production_date UNION ALL
+SELECT 3 AS order_id, 'PN-3' AS product_serial_no, TIMESTAMP('2023-01-03 10:00:00') AS start_time, TIMESTAMP('2023-01-03 11:00:00') AS end_time, 'NOTES-3' AS notes, '' AS work_memo, DATE('2023-01-03') AS production_date UNION ALL
+SELECT 4 AS order_id, 'PN-4' AS product_serial_no, TIMESTAMP('2023-01-04 10:00:00') AS start_time, TIMESTAMP('2023-01-04 11:00:00') AS end_time, 'NOTES-4' AS notes, 'memo' AS work_memo, DATE('2023-01-04') AS production_date UNION ALL
+SELECT 5 AS order_id, 'PN-5' AS product_serial_no, TIMESTAMP('2023-01-05 10:00:00') AS start_time, TIMESTAMP('2023-01-05 11:00:00') AS end_time, 'NOTES-5' AS notes, '' AS work_memo, DATE('2023-01-05') AS production_date

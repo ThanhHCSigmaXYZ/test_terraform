@@ -1,0 +1,31 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_mes_eq_status_agg",
+  bigquery: {
+    partitionBy: "status_date",
+    clusterBy: ["equipment_id"]
+  }
+}
+
+WITH
+  status_with_prev_time AS (
+    SELECT
+      status_log_id,
+      equipment_id,
+      status_code,
+      status_changed_at,
+      LAG(status_changed_at, 1) OVER (PARTITION BY equipment_id ORDER BY status_changed_at) AS prev_status_changed_at,
+      DATE(status_changed_at) AS status_date
+    FROM
+      ${ref("raw_mes_eq_status")}
+  )
+SELECT
+  status_log_id,
+  equipment_id,
+  status_code,
+  status_changed_at,
+  TIMESTAMP_DIFF(status_changed_at, prev_status_changed_at, SECOND) AS duration_sec,
+  status_date
+FROM
+  status_with_prev_time

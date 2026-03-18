@@ -1,0 +1,21 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "fct_machine_sensor",
+  bigquery: {
+    partitionBy: "telemetry_date",
+    clusterBy: ["product_serial_no", "machine_id"]
+  }
+}
+
+SELECT
+  res.machine_id,
+  res.telemetry_timestamp,
+  res.temperature,
+  perf.product_serial_no,
+  res.telemetry_date
+FROM
+  ${ref("tmp_iot_cnc_resampled")} AS res
+  LEFT JOIN ${ref("fct_production_performance")} AS perf
+  ON res.machine_id = perf.machine_id
+  AND res.telemetry_timestamp BETWEEN perf.start_time AND perf.end_time

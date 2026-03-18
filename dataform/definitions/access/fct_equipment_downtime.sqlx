@@ -1,0 +1,21 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "fct_equipment_downtime",
+  bigquery: {
+    partitionBy: "status_date",
+    clusterBy: ["equipment_id", "status_code"]
+  }
+}
+
+SELECT
+  agg.status_log_id,
+  agg.equipment_id,
+  agg.status_code,
+  agg.duration_sec,
+  perf.order_id,
+  agg.status_date
+FROM
+  ${ref("tmp_mes_eq_status_agg")} AS agg
+  LEFT JOIN ${ref("fct_production_performance")} AS perf ON agg.equipment_id = perf.equipment_id
+  AND agg.status_changed_at BETWEEN perf.start_time AND perf.end_time

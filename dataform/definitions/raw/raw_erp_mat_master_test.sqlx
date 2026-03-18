@@ -1,0 +1,18 @@
+config {
+  type: "test",
+  dataset: "raw_erp_mat_master"
+}
+
+input "erp_material_master" {
+  SELECT 'MAT-1' AS material_id, 'Material 1' AS description UNION ALL
+  SELECT 'MAT-2' AS material_id, 'Material 2' AS description UNION ALL
+  SELECT 'MAT-3' AS material_id, 'Material 3' AS description UNION ALL
+  SELECT 'MAT-4' AS material_id, 'Material 4' AS description UNION ALL
+  SELECT 'MAT-5' AS material_id, 'Material 5' AS description
+}
+
+SELECT 'MAT-1' AS material_id, 'Material 1' AS description, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'MAT-2' AS material_id, 'Material 2' AS description, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'MAT-3' AS material_id, 'Material 3' AS description, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'MAT-4' AS material_id, 'Material 4' AS description, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date UNION ALL
+SELECT 'MAT-5' AS material_id, 'Material 5' AS description, TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at, CURRENT_DATE() AS etl_loaded_date

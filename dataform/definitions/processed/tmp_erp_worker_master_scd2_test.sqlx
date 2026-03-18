@@ -1,0 +1,19 @@
+config {
+  type: "test",
+  dataset: "tmp_erp_worker_master_scd2"
+}
+
+input "raw_erp_worker_master" {
+  SELECT 'W-1' AS worker_id, 'Worker 1 v1' AS name, TIMESTAMP('2023-01-01 00:00:00') AS etl_loaded_at UNION ALL
+  SELECT 'W-1' AS worker_id, 'Worker 1 v2' AS name, TIMESTAMP('2023-01-05 00:00:00') AS etl_loaded_at UNION ALL
+  SELECT 'W-2' AS worker_id, 'Worker 2 v1' AS name, TIMESTAMP('2023-01-02 00:00:00') AS etl_loaded_at UNION ALL
+  SELECT 'W-1' AS worker_id, 'Worker 1 v3' AS name, TIMESTAMP('2023-01-10 00:00:00') AS etl_loaded_at UNION ALL
+  SELECT 'W-2' AS worker_id, 'Worker 2 v2' AS name, TIMESTAMP('2023-01-08 00:00:00') AS etl_loaded_at
+}
+
+-- NOTE: expected output derived from mock data — verify if transformation logic changes
+SELECT 'W-1' AS worker_id, 'Worker 1 v1' AS name, TIMESTAMP('2023-01-01 00:00:00') AS valid_from, TIMESTAMP('2023-01-05 00:00:00') AS valid_to, false AS is_current UNION ALL
+SELECT 'W-1' AS worker_id, 'Worker 1 v2' AS name, TIMESTAMP('2023-01-05 00:00:00') AS valid_from, TIMESTAMP('2023-01-10 00:00:00') AS valid_to, false AS is_current UNION ALL
+SELECT 'W-1' AS worker_id, 'Worker 1 v3' AS name, TIMESTAMP('2023-01-10 00:00:00') AS valid_from, TIMESTAMP('9999-12-31 23:59:59') AS valid_to, true AS is_current UNION ALL
+SELECT 'W-2' AS worker_id, 'Worker 2 v1' AS name, TIMESTAMP('2023-01-02 00:00:00') AS valid_from, TIMESTAMP('2023-01-08 00:00:00') AS valid_to, false AS is_current UNION ALL
+SELECT 'W-2' AS worker_id, 'Worker 2 v2' AS name, TIMESTAMP('2023-01-08 00:00:00') AS valid_from, TIMESTAMP('9999-12-31 23:59:59') AS valid_to, true AS is_current

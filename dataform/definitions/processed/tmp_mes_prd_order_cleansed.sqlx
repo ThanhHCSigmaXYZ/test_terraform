@@ -1,0 +1,27 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_mes_prd_order_cleansed",
+  bigquery: {
+    partitionBy: "production_date",
+    clusterBy: ["product_serial_no"]
+  }
+}
+
+WITH
+  cleaned AS (
+    SELECT
+      order_id,
+      product_serial_no,
+      CAST(start_time AS TIMESTAMP) AS start_time,
+      CAST(end_time AS TIMESTAMP) AS end_time,
+      REGEXP_REPLACE(notes, r'[Ａ-Ｚａ-ｚ０-９]', r'\0') AS notes,
+      COALESCE(work_memo, '') AS work_memo,
+      DATE(CAST(start_time AS TIMESTAMP)) AS production_date
+    FROM
+      ${ref("raw_mes_prd_order")}
+  )
+SELECT
+  *
+FROM
+  cleaned

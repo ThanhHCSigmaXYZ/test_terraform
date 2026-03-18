@@ -1,0 +1,45 @@
+config {
+  type: "table",
+  schema: "dev_dataform_dataset",
+  name: "tmp_iot_cnc_resampled",
+  bigquery: {
+    partitionBy: "telemetry_date",
+    clusterBy: ["machine_id"]
+  }
+}
+
+WITH
+  extracted_data AS (
+    SELECT
+      machine_id,
+      timestamp,
+      JSON_VALUE(payload, '$.temp') AS temperature
+    FROM
+      ${ref("raw_iot_cnc_telemetry")}
+  ),
+  -- This is a simplified outlier removal, a proper implementation would be more complex
+  no_outliers AS (
+    SELECT
+      *
+    FROM
+      extracted_data
+    WHERE
+      CAST(temperature AS FLOAT64) BETWEEN -50 AND 200
+  ),
+  resampled AS (
+    SELECT
+      machine_id,
+      TIMESTAMP_SECONDS(DIV(UNIX_SECONDS(timestamp), 1) * 1) AS telemetry_timestamp,
+      AVG(CAST(temperature AS FLOAT64)) AS temperature,
+      DATE(timestamp) AS telemetry_date
+    FROM
+      no_outliers
+    GROUP BY
+      1,
+      2,
+      4
+  )
+SELECT
+  *
+FROM
+  resampled
