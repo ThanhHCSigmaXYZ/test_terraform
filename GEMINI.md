@@ -1,187 +1,186 @@
 # GEMINI.md
-# This file is automatically read by Gemini CLI on every session.
-# Contains project constraints and workflow for Dataform code generation.
-# DO NOT modify without team lead approval.
+# このファイルはGemini CLIが起動するたびに自動的に読み込まれます。
+# Dataformコード生成に関するプロジェクトの制約とワークフローが含まれています。
+# チームリーダーの承認なしに変更しないでください。
 
 ---
 
-## Project Context
-- GCP Project: ats-theme-dmo-b2bdatacolab
-- Output Dataset: dev_dataform_dataset
-- Source Dataset: aiready
-- Location: asia-northeast1
-- Dataform Core Version: 3.0.7
+## プロジェクト情報
+- GCPプロジェクト: ats-theme-dmo-b2bdatacolab
+- 出力データセット: dev_dataform_dataset
+- ソースデータセット: aiready
+- リージョン: asia-northeast1
+- Dataformコアバージョン: 3.0.7
 
 ---
 
-## Folder Structure
-Tables are organized into 3 layers based on their prefix:
+## フォルダ構成
+テーブルはプレフィックスに基づいて3つのレイヤーに分類されます：
 
-| Table prefix | Layer | Output folder |
+| テーブルプレフィックス | レイヤー | 出力フォルダ |
 |---|---|---|
-| `raw_` | Raw layer | `dataform/definitions/raw/` |
-| `tmp_` | Processed layer | `dataform/definitions/processed/` |
-| `fct_`, `dim_` | Access layer | `dataform/definitions/access/` |
+| `raw_` | Rawレイヤー | `dataform/definitions/raw/` |
+| `tmp_` | Processedレイヤー | `dataform/definitions/processed/` |
+| `fct_`、`dim_` | Accessレイヤー | `dataform/definitions/access/` |
 
-Always create the folder if it does not exist before writing files.
-
----
-
-## Workflow — Single Table
-Only trigger when developer uses single-table trigger phrases.
-Follow these steps automatically without asking for confirmation:
-
-1. Read `docs/requirements.md` to find the requested table
-2. Read `templates/sqlx_template.sqlx` as format reference
-3. Determine the correct output folder based on table prefix (see Folder Structure)
-4. Generate main SQLX → write to correct folder
-5. Generate test SQLX following layer-specific test rules → write to same folder
-6. Report files created
-
-### Single-table trigger phrases
-- "create table [name]"
-- "generate dataform for [name]"
-- "make [name] table"
-- "generate [name]"
+ファイルを書き込む前に、フォルダが存在しない場合は必ず作成してください。
 
 ---
 
-## Workflow — All Tables
-Only trigger when developer uses bulk trigger phrases.
-Follow these steps automatically without asking for confirmation:
+## ワークフロー — 単一テーブル
+以下のトリガーフレーズが使用された場合のみ実行してください。
+確認を求めずに自動的に以下の手順に従ってください：
 
-1. Read `docs/requirements.md` to get the full list of all tables and source tables
-2. Read `templates/sqlx_template.sqlx` as format reference
-3. Create folder structure:
+1. `docs/requirements.md` を読み込み、対象テーブルを特定する
+2. `templates/sqlx_template.sqlx` をフォーマットの参考として読み込む
+3. テーブルプレフィックスに基づいて正しい出力フォルダを決定する（フォルダ構成参照）
+4. メインSQLXファイルを生成 → 正しいフォルダに書き込む
+5. レイヤー別テストルールに従ってテストSQLXファイルを生成 → 同じフォルダに書き込む
+6. 作成したファイルを報告する
+
+### 単一テーブルのトリガーフレーズ
+- "create table [テーブル名]"
+- "generate dataform for [テーブル名]"
+- "make [テーブル名] table"
+- "generate [テーブル名]"
+
+---
+
+## ワークフロー — 全テーブル一括
+以下のトリガーフレーズが使用された場合のみ実行してください。
+確認を求めずに自動的に以下の手順に従ってください：
+
+1. `docs/requirements.md` を読み込み、全テーブルとソーステーブルの一覧を取得する
+2. `templates/sqlx_template.sqlx` をフォーマットの参考として読み込む
+3. 以下のフォルダ構成を作成する：
    - `dataform/definitions/sources/`
    - `dataform/definitions/raw/`
    - `dataform/definitions/processed/`
    - `dataform/definitions/access/`
-4. For each source table listed in `docs/requirements.md` (tables from the `aiready` dataset):
-   - Generate one declaration file per source table → write to `dataform/definitions/sources/[source_table_name].sqlx`
-   - NEVER combine multiple source tables into one file
-5. For each table in `docs/requirements.md`:
-   - Determine correct folder based on table prefix
-   - Generate main SQLX → write to correct folder
-   - Generate test SQLX following layer-specific test rules → write to same folder
-6. Report summary of all files created grouped by layer (include declarations count)
+4. `docs/requirements.md` に記載された各ソーステーブル（`aiready`データセットのテーブル）について：
+   - ソーステーブル1つにつき1つのdeclarationファイルを生成 → `dataform/definitions/sources/[ソーステーブル名].sqlx` に書き込む
+   - 複数のソーステーブルを1つのファイルにまとめないこと
+5. `docs/requirements.md` の各テーブルについて：
+   - テーブルプレフィックスに基づいて正しいフォルダを決定する
+   - メインSQLXファイルを生成 → 正しいフォルダに書き込む
+   - レイヤー別テストルールに従ってテストSQLXファイルを生成 → 同じフォルダに書き込む
+6. レイヤー別にグループ化した全作成ファイルのサマリーを報告する（declaration数も含む）
 
-### Bulk trigger phrases
+### 一括生成のトリガーフレーズ
 - "generate dataform files based on tables"
 - "全テーブル作成"
 - "create all tables"
 
 ---
 
-## File Naming Convention
-| File | Path |
+## ファイル命名規則
+| ファイル | パス |
 |---|---|
-| Requirements & Spec | `docs/requirements.md` |
-| SQLX format reference | `templates/sqlx_template.sqlx` |
-| Source declaration | `dataform/definitions/sources/[source_table_name].sqlx` |
-| Raw layer SQLX | `dataform/definitions/raw/[table_name].sqlx` |
-| Raw layer test | `dataform/definitions/raw/[table_name]_test.sqlx` |
-| Processed layer SQLX | `dataform/definitions/processed/[table_name].sqlx` |
-| Processed layer test | `dataform/definitions/processed/[table_name]_test.sqlx` |
-| Access layer SQLX | `dataform/definitions/access/[table_name].sqlx` |
-| Access layer test | `dataform/definitions/access/[table_name]_test.sqlx` |
+| 要件・仕様 | `docs/requirements.md` |
+| SQLXフォーマット参考 | `templates/sqlx_template.sqlx` |
+| ソースdeclaration | `dataform/definitions/sources/[ソーステーブル名].sqlx` |
+| RawレイヤーSQLX | `dataform/definitions/raw/[テーブル名].sqlx` |
+| Rawレイヤーテスト | `dataform/definitions/raw/[テーブル名]_test.sqlx` |
+| ProcessedレイヤーSQLX | `dataform/definitions/processed/[テーブル名].sqlx` |
+| Processedレイヤーテスト | `dataform/definitions/processed/[テーブル名]_test.sqlx` |
+| AccessレイヤーSQLX | `dataform/definitions/access/[テーブル名].sqlx` |
+| Accessレイヤーテスト | `dataform/definitions/access/[テーブル名]_test.sqlx` |
 
 ---
 
-## SQLX Code Rules
-- Follow the structure and format defined in `templates/sqlx_template.sqlx` for table generating and for test generating is in `templates/sqlx_test_template.sqlx`
-- type must be: "table" for main file, "test" for test file
-- schema must always be: dev_dataform_dataset
-- Always use `${ref("table_name")}` to reference source tables
-- for "table" - main file's config, please follow these below format strictly
- ```
+## SQLXコーディングルール
+- テーブル生成には `templates/sqlx_template.sqlx`、テスト生成には `templates/sqlx_test_template.sqlx` の構造とフォーマットに従うこと
+- typeは：メインファイルは "table"、テストファイルは "test" とすること
+- schemaは常に: dev_dataform_dataset とすること
+- ソーステーブルの参照には常に `${ref("テーブル名")}` を使用すること
+- "table"（メインファイル）のconfigは以下のフォーマットに厳密に従うこと：
+  ```
   config {
     type: "table",
     schema: "dev_dataform_dataset",
-    name: "table_name"
+    name: "テーブル名"
   }
   ```
-- Always use single quotes for strings in BigQuery SQL → 'value' not "value"
-- Never use CURRENT_TIMESTAMP() in any column — use `TIMESTAMP(CURRENT_DATE())` instead for ETL metadata columns
-- Apply partition key and clustering key from `docs/requirements.md` if specified
-- NEVER use `SELECT * EXCEPT(col1, col2, ...)` pattern — always list output columns explicitly. If a source has columns that need renaming or transformation, list each output column by name. The `* EXCEPT` pattern fails when the excepted columns are the only columns in the source (produces 0-column output)
-- For BigQuery window functions: `LAG(col, offset)` and `LEAD(col, offset)` default value argument MUST be a constant — NEVER use a column reference as the default. Use `COALESCE(LAG(col, n) OVER (...), fallback_col)` instead
-- For JSON parsing: use `JSON_VALUE(col, '$.key')` — NEVER use `SAFE.JSON_EXTRACT_SCALAR(...)`. The `SAFE.` prefix is not supported for built-in BigQuery functions
+- BigQuery SQLの文字列には常にシングルクォートを使用すること → 'value'（"value"は不可）
+- どのカラムにも `CURRENT_TIMESTAMP()` を使用しないこと — ETLメタデータカラムには代わりに `TIMESTAMP(CURRENT_DATE())` を使用すること
+- パーティションキーとクラスタリングキーは `docs/requirements.md` の指定に従って適用すること
+- `SELECT * EXCEPT(col1, col2, ...)` パターンは絶対に使用しないこと — 出力カラムは常に明示的にリストすること。ソースにリネームや変換が必要なカラムがある場合は、各出力カラムを名前で列挙すること。`* EXCEPT` パターンは、除外するカラムがソースの唯一のカラムである場合に失敗する（0カラム出力になる）
+- BigQueryウィンドウ関数について：`LAG(col, offset)` と `LEAD(col, offset)` のデフォルト値引数は定数でなければならない — カラム参照をデフォルトとして使用しないこと。代わりに `COALESCE(LAG(col, n) OVER (...), fallback_col)` を使用すること
+- JSONパース：`JSON_VALUE(col, '$.key')` を使用すること — `SAFE.JSON_EXTRACT_SCALAR(...)` は絶対に使用しないこと。`SAFE.` プレフィックスはBigQueryの組み込み関数ではサポートされていない
 
-
-### Source Table Declarations
-- Each source table (from dataset `aiready`) MUST have its own individual `.sqlx` file in `dataform/definitions/sources/`
-- NEVER put multiple `config {}` blocks in one file — Dataform does not support this
-- Format for each declaration file: 
+### ソーステーブルDeclaration
+- 各ソーステーブル（`aiready`データセットのもの）は `dataform/definitions/sources/` に個別の `.sqlx` ファイルが必要
+- 1つのファイルに複数の `config {}` ブロックを入れないこと — Dataformはこれをサポートしていない
+- 各declarationファイルのフォーマット：
   ```
   config {
     type: "declaration",
     schema: "aiready",
-    name: "table_name"
+    name: "テーブル名"
   }
   ```
 
 ---
 
-## Test Rules
+## テストルール
 
-### Common Rules (all layers)
-- config block must include BOTH: `type: "test"` AND `dataset: "[table_name]"`
-- input block syntax is STRICTLY `input "table_name" { SELECT col1, col2 FROM ... UNION ALL SELECT ... }` — NEVER use `input { name: "...", data: [...] }` (that object/array format does not exist in Dataform and causes a compile error)
-- Mock data must have at least 5 rows
-- Never include `CURRENT_TIMESTAMP()` anywhere in the test file
-- The expected output is a bare `SELECT` statement after the last `input {}` block — NEVER wrap it in `expected { ... }` (Dataform does not support that syntax)
-- Every row in UNION ALL — both in `input` blocks and in the expected output — MUST start with `SELECT`. NEVER use the shorthand `SELECT col1 UNION ALL col2` where subsequent rows omit `SELECT`. Correct: `SELECT col1 UNION ALL SELECT col2`. Wrong: `SELECT col1 UNION ALL col2` (causes syntax error)
-- The `expected` output MUST use hardcoded literal values — NEVER use `SELECT ... FROM ${ref(...)}`, `SELECT ... FROM ${ self.name }`, or any table reference
-- Expected output values must be deterministically calculable from the mock input data
-- Always use single quotes for string literals
-- Float precision: when expected value is the result of arithmetic on FLOAT64 inputs (e.g. AVG, division), use the same arithmetic expression in the expected output rather than a decimal literal. Example: use `(0.2 + 0.22) / 2` not `0.21` to avoid IEEE 754 mismatch
+### 共通ルール（全レイヤー）
+- configブロックには必ず `type: "test"` と `dataset: "[テーブル名]"` の両方を含めること
+- inputブロックの構文は厳密に `input "テーブル名" { SELECT col1, col2 FROM ... UNION ALL SELECT ... }` とすること — `input { name: "...", data: [...] }` のオブジェクト/配列形式は絶対に使用しないこと（Dataformに存在せず、コンパイルエラーになる）
+- モックデータは最低5行用意すること
+- テストファイルのどこにも `CURRENT_TIMESTAMP()` を含めないこと
+- 期待出力は最後の `input {}` ブロックの後の単純な `SELECT` 文とすること — `expected { ... }` でラップしないこと（Dataformはこの構文をサポートしていない）
+- UNION ALL の全行（`input` ブロックと期待出力の両方）は必ず `SELECT` で始めること。`SELECT col1 UNION ALL col2` のように後続行で `SELECT` を省略しないこと。正しい例：`SELECT col1 UNION ALL SELECT col2`。誤った例：`SELECT col1 UNION ALL col2`（構文エラーになる）
+- 期待出力はハードコードされたリテラル値を使用すること — `SELECT ... FROM ${ref(...)}` や `SELECT ... FROM ${ self.name }` などのテーブル参照は絶対に使用しないこと
+- 期待出力の値はモック入力データから決定論的に計算可能であること
+- 文字列リテラルには常にシングルクォートを使用すること
+- 浮動小数点の精度：期待値がFLOAT64入力の演算結果（AVG、除算など）の場合、小数リテラルではなく同じ演算式を期待出力に使用すること。例：`0.21` ではなく `(0.2 + 0.22) / 2` を使用すること（IEEE 754の不一致を防ぐため）
 
-### Raw Layer (`raw_` prefix)
-Additional rules on top of Common Rules:
-- Raw table SQL must use `TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at` and `CURRENT_DATE() AS etl_loaded_date` — NEVER use `CURRENT_TIMESTAMP()` for these columns
-- In the test expected output, include `TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at` and `CURRENT_DATE() AS etl_loaded_date` for every row — this matches the table SQL and is stable within a day
-- The input `{}` block does NOT include `etl_loaded_at` or `etl_loaded_date` (they are added by the raw table SQL, not sourced from the input)
-- All other columns in the expected rows must mirror the input rows exactly (same values)
+### Rawレイヤー（`raw_` プレフィックス）
+共通ルールに加えて：
+- Raw テーブルSQLでは `TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at` と `CURRENT_DATE() AS etl_loaded_date` を使用すること — これらのカラムに `CURRENT_TIMESTAMP()` は絶対に使用しないこと
+- テスト期待出力では、全行に `TIMESTAMP(CURRENT_DATE()) AS etl_loaded_at` と `CURRENT_DATE() AS etl_loaded_date` を含めること — これはテーブルSQLと一致し、1日以内は安定している
+- `input {}` ブロックには `etl_loaded_at` と `etl_loaded_date` を含めないこと（これらはinputから取得するのではなく、rawテーブルSQLで追加される）
+- 期待出力の他の全カラムはinputの行と完全に一致すること（同じ値）
 
-### Processed Layer (`tmp_` prefix)
-Additional rules on top of Common Rules:
-- Always compute the expected output by tracing through the SQL logic step by step using the mock input values — never leave expected output empty
-- NEVER generate a skeleton or leave expected output as a placeholder
-- NEVER use `-- SKELETON: fill in expected output manually` or `-- TODO: verify this expected output manually`
-- For complex logic (LAG, LEAD, window functions, unit conversions, SCD2, multi-step WITH):
-  - Design mock data simple enough to hand-calculate (e.g. small distinct values, clear date sequences)
-  - Compute each output column value explicitly from the mock data
-- BigQuery LAG/LEAD constraint: the 3rd argument (default value) MUST be a constant, not a column. Use `COALESCE(LAG(col, 1) OVER (PARTITION BY ... ORDER BY ...), col)` pattern instead of `LAG(col, 1, col) OVER (...)`
-- NEVER use `SELECT * EXCEPT(col1, col2, ...)` in the main SQL — list all output columns explicitly. The `* EXCEPT` pattern fails during testing when the excepted columns are the only columns in the mock input (produces 0-column output)
-- Row ordering in test expected: Dataform compares rows positionally. For queries with `PARTITION BY`, BigQuery returns all rows of one partition before the next (e.g., all equip1 rows ordered by the window ORDER BY, then all equip2 rows). Design the expected output to match this partition-then-order pattern, NOT by overall timestamp across partitions
-- If the SQL contains a bug or ambiguous behavior, add a comment documenting the assumption, then generate expected output matching what the SQL will actually produce
-- Add this comment above the expected block:
+### Processedレイヤー（`tmp_` プレフィックス）
+共通ルールに加えて：
+- モック入力値を使ってSQLロジックをステップごとにトレースし、期待出力を必ず計算すること — 期待出力を空のままにしないこと
+- スケルトンを生成したり、期待出力をプレースホルダーにしたりしないこと
+- `-- SKELETON: fill in expected output manually` や `-- TODO: verify this expected output manually` は絶対に使用しないこと
+- 複雑なロジック（LAG、LEAD、ウィンドウ関数、単位変換、SCD2、複数ステップのWITH句）の場合：
+  - 手計算できるほどシンプルなモックデータを設計すること（例：小さな明確な値、明確な日付シーケンス）
+  - モックデータから各出力カラムの値を明示的に計算すること
+- BigQuery LAG/LEAD の制約：3番目の引数（デフォルト値）は定数でなければならず、カラムは不可。`LAG(col, 1, col) OVER (...)` の代わりに `COALESCE(LAG(col, 1) OVER (PARTITION BY ... ORDER BY ...), col)` パターンを使用すること
+- メインSQLで `SELECT * EXCEPT(col1, col2, ...)` を使用しないこと — 全出力カラムを明示的にリストすること。`* EXCEPT` パターンはテスト時にモック入力の唯一のカラムが除外対象の場合に失敗する（0カラム出力になる）
+- テスト期待出力の行の順序：DataformはPositionalに行を比較する。`PARTITION BY` を含むクエリでは、BigQueryは1つのパーティションの全行を次のパーティションより先に返す（例：ウィンドウORDER BYでソートされたequip1の全行、その後equip2の全行）。期待出力はパーティション内順序のパターンに一致させること（パーティション横断の全体的なタイムスタンプ順ではない）
+- SQLにバグや曖昧な動作がある場合は、前提条件を文書化するコメントを追加し、SQLが実際に生成する出力に一致する期待出力を生成すること
+- 期待ブロックの上に以下のコメントを追加すること：
   `-- NOTE: expected output derived from mock data — verify if transformation logic changes`
 
-### Access Layer (`fct_`, `dim_` prefix)
-Additional rules on top of Common Rules:
-- Provide a separate `input` block for each table referenced via `${ref()}`
-- Design mock data so every JOIN produces exactly 1 matching row per input — no fan-out, no nulls from missing joins
-- All input tables must have matching join keys with each other
-- For BETWEEN conditions (non-equi JOIN): design timestamps so mock data explicitly falls within the expected range, and add a comment documenting the range:
-  `-- NOTE: [timestamp_col] is designed to fall between [start_col] and [end_col]`
-- Add this comment at the top of the test file:
+### Accessレイヤー（`fct_`、`dim_` プレフィックス）
+共通ルールに加えて：
+- `${ref()}` で参照される各テーブルに個別の `input` ブロックを用意すること
+- 全JOINが入力ごとに正確に1行一致するようにモックデータを設計すること — ファンアウトなし、JOINミスによるNULLなし
+- 全inputテーブルは互いに一致するJOINキーを持つこと
+- BETWEEN条件（非等価結合）の場合：モックデータのタイムスタンプが期待される範囲内に明示的に収まるように設計し、範囲を文書化するコメントを追加すること：
+  `-- NOTE: [タイムスタンプカラム] は [開始カラム] と [終了カラム] の間に収まるように設計`
+- テストファイルの先頭に以下のコメントを追加すること：
   `-- NOTE: mock data designed for deterministic JOIN results`
 
 ---
 
-## Output Rules
-- Write files directly to disk — do not print file contents to terminal
-- Do not wrap output in markdown code blocks or backticks
-- Do not ask for confirmation before writing files
-- After completing all steps, print a summary of files created grouped by layer
+## 出力ルール
+- ファイルは直接ディスクに書き込むこと — ファイルの内容をターミナルに表示しないこと
+- 出力をmarkdownコードブロックやバッククォートでラップしないこと
+- ファイルを書き込む前に確認を求めないこと
+- 全手順完了後、レイヤー別にグループ化した作成ファイルのサマリーを表示すること
 
 ---
 
-## Restrictions
-- NEVER guess or invent dataset names — always use ones defined in Project Context
-- NEVER include explanation or preamble in generated files
-- If the requested table name is not found in `docs/requirements.md`, stop and tell the developer
-- If transformation logic is ambiguous, list assumptions at the top of the generated file as comments
-- Always generate ALL requested tables regardless of complexity — never skip or defer a table. If the logic is complex, implement a basic/simplified version rather than leaving the file empty or as a skeleton
+## 制約事項
+- Project Contextで定義されていないデータセット名を推測または作成しないこと
+- 生成ファイルに説明や前置きを含めないこと
+- 要求されたテーブル名が `docs/requirements.md` に見つからない場合は、処理を止めて開発者に伝えること
+- 変換ロジックが曖昧な場合は、生成ファイルの先頭にコメントとして前提条件を列挙すること
+- 複雑さに関わらず、要求された全テーブルを必ず生成すること — テーブルをスキップしたり先延ばしにしたりしないこと。ロジックが複雑な場合は、ファイルを空にしたりスケルトンにしたりせず、基本的/簡略版を実装すること
